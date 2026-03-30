@@ -19,14 +19,15 @@ services:
     container_name: ft_transcendence_backend
     ports:
       - "3000:3000"
+      - "5555:5555"
     environment:
-      DATABASE_URL: postgres://postgres:pgpass@db:5432/transcendence
+      DATABASE_URL: postgres://postgres:pgpass@db:5432/ft_transcendence
     depends_on:
       - db
     volumes:
       - ./backend:/app
       - /app/node_modules
-    command: npm run dev #no hace build completo cada cambio
+    command: sh -c "npx prisma migrate deploy && npx prisma studio & npm run dev"
 
   frontend:
     build:
