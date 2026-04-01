@@ -24,17 +24,26 @@ model User {
   friendsFrom Friendship[] @relation("FriendFrom")
   friendsTo   Friendship[] @relation("FriendTo")
   messages    Message[]
+  oauthId     String?  @unique
+  oauthProvider String?
+  password    String?  // opcional porque con OAuth no hay password
 }
 
 model Match {
-  id        Int      @id @default(autoincrement())
-  player1   User     @relation("Player1", fields: [player1Id], references: [id])
-  player1Id Int
-  player2   User     @relation("Player2", fields: [player2Id], references: [id])
-  player2Id Int
-  score1    Int      @default(0)
-  score2    Int      @default(0)
-  playedAt  DateTime @default(now())
+  id          Int      @id @default(autoincrement())
+  player1     User     @relation("Player1", fields: [player1Id], references: [id])
+  player1Id   Int
+  player2     User?    @relation("Player2", fields: [player2Id], references: [id])
+  player2Id   Int?     // opcional porque puede jugar vs IA
+  isVsAI      Boolean  @default(false)
+  winner      String?  // "player1", "player2", "draw"
+  board       String   @default("_________") // estado del tablero
+  status      String   @default("waiting")   // "waiting", "playing", "finished"
+  customRules Json?    // para game customization
+  score1      Int      @default(0)
+  score2      Int      @default(0)
+  playedAt    DateTime @default(now())
+  finishedAt  DateTime?
 }
 
 model Friendship {
