@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<body>
+  <input id="msg" placeholder="Escribe un mensaje" />
+  <button onclick="send()">Enviar</button>
+  <ul id="messages"></ul>
+
+  <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+  <script>
+    const socket = io('https://localhost', {
+  rejectUnauthorized: false,
+  secure: true,
+});
+
+    socket.on('connect', () => {
+      console.log('Conectado:', socket.id);
+    });
+
+    socket.on('newMessage', (data) => {
+      const li = document.createElement('li');
+      li.textContent = `${data.clientId}: ${data.content}`;
+      document.getElementById('messages').appendChild(li);
+    });
+
+    function send() {
+      const content = document.getElementById('msg').value;
+      socket.emit('sendMessage', { content, channelId: 1 });
+    }
+  </script>
+</body>
+</html>
