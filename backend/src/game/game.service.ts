@@ -8,14 +8,14 @@ export class GameService {
   async createGame(player1Id: number) {
     return this.prisma.match.create({
       data: {
-        player1Id,
+        player1: { connect: { id: player1Id } },
         status: 'waiting',
         board: '_________',
       },
     });
   }
 
-  async joinGame(gameId: number, player2Id: number) {
+    async joinGame(gameId: number, player2Id: number) {
     const game = await this.prisma.match.findUnique({ where: { id: gameId } });
 
     if (!game) throw new NotFoundException('Partida no encontrada');
@@ -25,7 +25,7 @@ export class GameService {
     return this.prisma.match.update({
       where: { id: gameId },
       data: {
-        player2Id,
+        player2: { connect: { id: player2Id } },
         status: 'playing',
       },
     });
@@ -67,6 +67,8 @@ export class GameService {
     board[position] = isPlayer1Turn ? 'X' : 'O';
     const newBoard = board.join('');
 
+    this.printBoard(newBoard);
+
     const winner = this.checkWinner(newBoard);
     const isDraw = !winner && !newBoard.includes('_');
 
@@ -92,5 +94,16 @@ export class GameService {
     return wins.some(([a,b,c]) =>
       board[a] !== '_' && board[a] === board[b] && board[b] === board[c]
     );
+  }
+
+  private printBoard(board: string): void {
+    const b = board.split('').map(c => c === '_' ? '·' : c);
+    console.log('\n+---+---+---+');
+    console.log(`| ${b[0]} | ${b[1]} | ${b[2]} |`);
+    console.log('+---+---+---+');
+    console.log(`| ${b[3]} | ${b[4]} | ${b[5]} |`);
+    console.log('+---+---+---+');
+    console.log(`| ${b[6]} | ${b[7]} | ${b[8]} |`);
+    console.log('+---+---+---+\n');
   }
 }
