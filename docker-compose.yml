@@ -4,7 +4,7 @@ services:
     restart: always
     environment:
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: pgpass
+      POSTGRES_PASSWORD: postgres
       POSTGRES_DB: ft_transcendence
     ports:
       - "5432:5432"
@@ -17,11 +17,11 @@ services:
       args:
         NODE_ENV: development
     container_name: ft_transcendence_backend
+    env_file:
+      - .env 
     ports:
       - "3000:3000"
       - "5555:5555"
-    environment:
-      DATABASE_URL: postgres://postgres:pgpass@db:5432/ft_transcendence
     depends_on:
       - db
     volumes:
