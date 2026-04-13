@@ -9,8 +9,11 @@
   <p id="msg"></p>
 
   <script>
+    const HOST = `https://${window.location.hostname}`;
+    const PORT = window.location.port ? `:${window.location.port}` : '';
+
     async function login() {
-      const res = await fetch('https://localhost/api/auth/login', {
+      const res = await fetch(`${HOST}/api/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -21,14 +24,14 @@
       const data = await res.json();
       if (res.ok) {
         localStorage.setItem('token', data.access_token);
-        window.location.href = '/chat.html';
+        window.location.href = `${HOST}${PORT}/chat.html`;
       } else {
         document.getElementById('msg').textContent = '❌ ' + (data.message || 'Error');
       }
     }
 
     async function register() {
-      const res = await fetch('https://localhost/api/auth/register', {
+      const res = await fetch(`${HOST}/api/auth/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -40,7 +43,7 @@
       const data = await res.json();
       if (res.ok) {
         localStorage.setItem('token', data.access_token);
-        window.location.href = '/chat.html';
+        window.location.href = `${HOST}${PORT}/chat.html`;
       } else {
         document.getElementById('msg').textContent = '❌ ' + (data.message || 'Error');
       }
