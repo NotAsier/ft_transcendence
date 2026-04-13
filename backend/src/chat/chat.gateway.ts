@@ -8,6 +8,7 @@ import {
   OnGatewayDisconnect,
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
+import { ChatService } from './chat.service';
 
 @WebSocketGateway({
   cors: {
@@ -16,10 +17,11 @@ import { Server, Socket } from 'socket.io';
   },
   transports: ['websocket', 'polling'],
 })
-
 export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @WebSocketServer()
   server: Server;
+
+  constructor(private chatService: ChatService) {}
 
   handleConnection(client: Socket) {
     console.log(`Cliente conectado: ${client.id}`);
@@ -30,16 +32,30 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   @SubscribeMessage('sendMessage')
-  handleMessage(
-    @MessageBody() data: { content: string; channelId: number },
+  async handleMessage(
+    @MessageBody() data: { content: string; channelId: number; authorId: number },
     @ConnectedSocket() client: Socket,
   ) {
-    // Por ahora broadcast a todos (mock sin JWT ni BD)
+    const message = await this.chatService.saveMessage(
+      data.content,
+      data.authorId,
+      data.channelId,
+    );
+
     this.server.emit('newMessage', {
-      content: data.content,
-      channelId: data.channelId,
-      clientId: client.id,
-      sentAt: new Date(),
+      content: message.content,
+      channelId: message.channelId,
+      authorId: message.authorId,
+      sentAt: message.sentAt,
     });
+  }
+
+  @SubscribeMessage('getMessages')
+  async handleGetMessages(
+    @MessageBody() data: { channelId: number },
+    @ConnectedSocket() client: Socket,
+  ) {
+    const messages = await this.chatService.getMessages(data.channelId);
+    client.emit('messageHistory', messages);
   }
 }
