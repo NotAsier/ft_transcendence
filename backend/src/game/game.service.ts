@@ -72,7 +72,7 @@ export class GameService {
     const winner = this.checkWinner(newBoard);
     const isDraw = !winner && !newBoard.includes('_');
 
-    return this.prisma.match.update({
+    const updatedGame = await this.prisma.match.update({
       where: { id: gameId },
       data: {
         board: newBoard,
@@ -83,6 +83,16 @@ export class GameService {
         score2: winner && !isPlayer1Turn ? { increment: 1 } : undefined,
       },
     });
+
+    if (winner) {
+      const winnerId = isPlayer1Turn ? updatedGame.player1Id : updatedGame.player2Id;
+      await this.prisma.user.update({
+        where: { id: winnerId },
+        data: { wins: { increment: 1 } },
+      });
+    }
+
+    return updatedGame;
   }
 
   private checkWinner(board: string): boolean {
