@@ -1,4 +1,4 @@
-import { Injectable, UnauthorizedException, ConflictException } from '@nestjs/common';
+import { Injectable, UnauthorizedException, ConflictException, BadRequestException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from '../prisma/prisma.service';
 import * as bcrypt from 'bcrypt';
@@ -10,13 +10,42 @@ export class AuthService {
     private jwtService: JwtService,
   ) {}
 
-  async register(email: string, password: string, username: string) {
-    const exists = await this.prisma.user.findUnique({ where: { email } });
-    if (exists) throw new ConflictException('Email ya registrado');
+  async register(
+    email: string,
+    password: string,
+    username: string,
+    birthDate?: string,
+    country?: string,
+    gender?: string,
+  ) {
+    const emailExists = await this.prisma.user.findUnique({ where: { email } });
+    if (emailExists) throw new ConflictException('Email ya registrado');
+
+    const usernameExists = await this.prisma.user.findUnique({ where: { username } });
+    if (usernameExists) throw new ConflictException('Username ya en uso');
+
+    if (birthDate) {
+    const date = new Date(birthDate);
+    if (isNaN(date.getTime())) throw new BadRequestException('Fecha de nacimiento inválida');
+    const minAge = new Date();
+      minAge.setFullYear(minAge.getFullYear() - 120);
+    if(minAge > date)
+      throw new BadRequestException('mu viejo');
+    const today = new Date();
+    if (date > today)
+      throw new BadRequestException('futurama');
+}
 
     const hash = await bcrypt.hash(password, 10);
     const user = await this.prisma.user.create({
-      data: { email, password: hash, username },
+      data: {
+        email,
+        password: hash,
+        username,
+        birthDate: birthDate ? new Date(birthDate) : null,
+        country: country ?? null,
+        gender: gender ?? null,
+      },
     });
 
     return this.signToken(user.id, user.email);

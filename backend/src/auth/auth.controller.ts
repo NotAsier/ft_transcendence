@@ -5,6 +5,9 @@ class RegisterDto {
   email: string;
   password: string;
   username: string;
+  birthDate?: string;
+  country?: string;
+  gender?: string;
 }
 
 class LoginDto {
@@ -18,7 +21,14 @@ export class AuthController {
 
   @Post('register')
   register(@Body() dto: RegisterDto) {
-    return this.authService.register(dto.email, dto.password, dto.username);
+    return this.authService.register(
+      dto.email,
+      dto.password,
+      dto.username,
+      dto.birthDate,
+      dto.country,
+      dto.gender,
+    );
   }
 
   @Post('login')
