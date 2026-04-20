@@ -29,7 +29,7 @@ type View = "home" | "login" | "register" | "game";
 
 export default function Home() {
   const [view, setView] = useState<View>("home");
-  const [token, setToken] = useState<string | null>(null);
+ 
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -56,7 +56,6 @@ export default function Home() {
       });
       const data = await res.json();
       if (data.statusCode) throw new Error(data.message);
-      setToken(data.access_token);
       setView("game");
     } catch (e: any) {
       setError(e.message || "Error al iniciar sesión");
@@ -82,7 +81,6 @@ export default function Home() {
       });
       const data = await res.json();
       if (data.statusCode) throw new Error(data.message);
-      setToken(data.access_token);
       setView("game");
     } catch (e: any) {
       setError(e.message || "Error al registrarse");
