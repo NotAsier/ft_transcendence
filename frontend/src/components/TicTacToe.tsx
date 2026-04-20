@@ -1,6 +1,6 @@
 import { useState } from "react";
  
-const API = "http://localhost:3000/api";
+const API = "/api";
 const TOKEN1 = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOjEsImVtYWlsIjoidGVzdEB0ZXN0LmNvbSIsImlhdCI6MTc3NjE1NDM0NCwiZXhwIjoxNzc2NzU5MTQ0fQ.a6mIUSV4wH9rVoK4V87nq3oM6t3bP5qpnrEZ-KfcOds";
 const TOKEN2 = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOjIsImVtYWlsIjoidGVzdDJAdGVzdC5jb20iLCJpYXQiOjE3NzYxNTQzODEsImV4cCI6MTc3Njc1OTE4MX0.JEwUtC4Jb9xgJB_sJfiGfTADRkGKWDPbzbUb3n9GZ0A";
  

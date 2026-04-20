@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Dashboard } from "../components/Dashboard";
 
-const API = "http://localhost:3000/api";
+const API = "/api";
 
 const COUNTRIES = [
   "Afghanistan","Albania","Algeria","Andorra","Angola","Argentina","Armenia","Australia",

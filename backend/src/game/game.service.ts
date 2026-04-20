@@ -85,7 +85,7 @@ export class GameService {
     });
 
     if (winner) {
-      const winnerId = isPlayer1Turn ? updatedGame.player1Id : updatedGame.player2Id;
+      const winnerId = isPlayer1Turn ? updatedGame.player1Id ?? undefined : updatedGame.player2Id ?? undefined;
       await this.prisma.user.update({
         where: { id: winnerId },
         data: { wins: { increment: 1 } },
