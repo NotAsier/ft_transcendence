@@ -3,25 +3,18 @@ import { PrismaClient } from '@prisma/client';
 const prisma = new PrismaClient();
 
 async function main() {
-  const alice = await prisma.user.upsert({
-    where: { email: 'alice@test.com' },
-    update: {},
-    create: {
-      email: 'alice@test.com',
-      username: 'alice',
-      displayName: 'Alice',
-    },
-  });
+  
 
-  const bob = await prisma.user.upsert({
-    where: { email: 'bob@test.com' },
-    update: {},
-    create: {
-      email: 'bob@test.com',
-      username: 'bob',
-      displayName: 'Bob',
-    },
-  });
+  const guest = await prisma.user.upsert({
+  where: { email: 'guest@transcendence.local' },
+  update: {},
+  create: {
+    email: 'guest@transcendence.local',
+    username: 'Guest',
+    displayName: 'Guest',
+    password: null,
+  },
+});
 
   await prisma.channel.upsert({
     where: { name: 'general' },
@@ -29,7 +22,7 @@ async function main() {
     create: { name: 'general' },
   });
 
-  console.log('✅ Seed completado:', { alice, bob });
+  console.log('✅ Seed completado:', {guest });
 }
 
 main()

@@ -12,4 +12,9 @@ export class UserService {
       // Nunca devuelvas el campo password
     });
   }
+  async getAll() {
+    return this.prisma.user.findMany({
+    select: { id: true, username: true },
+    });
+  }
 }

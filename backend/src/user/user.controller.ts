@@ -11,4 +11,9 @@ export class UserController {
   getMe(@Request() req) {
     return this.userService.getMe(req.user.userId);
   }
+  @Get()
+  @UseGuards(JwtAuthGuard)
+  getAll() {
+  return this.userService.getAll();
+}
 }

@@ -1,3 +1,1 @@
-import TicTacToe from "./TicTacToe";
-
-export const Dashboard = () => <TicTacToe />;
+export const Dashboard = () => null;

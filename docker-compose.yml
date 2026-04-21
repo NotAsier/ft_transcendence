@@ -27,7 +27,7 @@ services:
     volumes:
       - ./backend:/app
       - /app/node_modules
-    command: sh -c "npx prisma generate && npx prisma migrate deploy && npx prisma studio & npm run dev"
+    command: sh -c "npx prisma generate && npx prisma migrate deploy && npx prisma db seed && npx prisma studio & npm run dev"
 
   frontend:
     build:
