@@ -28,7 +28,17 @@ const COUNTRIES = [
 type View = "home" | "login" | "register" | "lobby" | "game";
 
 interface User { id: number; username: string; }
-interface Player { id: number; username: string; token: string; }
+interface Player {
+  id: number;
+  username: string;
+  token: string;
+  email?: string;
+  displayName?: string;
+  country?: string;
+  gender?: string;
+  birthDate?: string;
+  wins?: number;
+}
 
 export default function Home() {
   const [view, setView] = useState<View>("home");
@@ -72,7 +82,17 @@ export default function Home() {
       });
       const me = await meRes.json();
 
-      const p1: Player = { id: me.id, username: me.username, token: data.access_token };
+      const p1: Player = {
+        id: me.id,
+        username: me.username,
+        token: data.access_token,
+        email: me.email,
+        displayName: me.displayName,
+        country: me.country,
+        gender: me.gender,
+        birthDate: me.birthDate,
+        wins: me.wins,
+      };
       setPlayer1(p1);
 
       const all = await fetchUsers(data.access_token);
@@ -108,7 +128,17 @@ export default function Home() {
       });
       const me = await meRes.json();
 
-      const p1: Player = { id: me.id, username: me.username, token: data.access_token };
+      const p1: Player = {
+        id: me.id,
+        username: me.username,
+        token: data.access_token,
+        email: me.email,
+        displayName: me.displayName,
+        country: me.country,
+        gender: me.gender,
+        birthDate: me.birthDate,
+        wins: me.wins,
+      };
       setPlayer1(p1);
 
       const all = await fetchUsers(data.access_token);
@@ -125,7 +155,6 @@ export default function Home() {
     setView("game");
   };
 
-  // ── Game ─────────────────────────────────────────────────
   if (view === "game" && player1 && player2) {
     return (
       <TicTacToe
@@ -215,7 +244,42 @@ export default function Home() {
         {/* LOBBY */}
         {view === "lobby" && player1 && (
           <div>
-            <p style={s.loggedIn}>✓ {player1.username} — J1 (X)</p>
+            {/* Perfil */}
+            <div style={s.profile}>
+              <div style={s.profileHeader}>
+                <div style={s.avatar}>{player1.username[0].toUpperCase()}</div>
+                <div>
+                  <p style={s.profileName}>{player1.displayName || player1.username}</p>
+                  <p style={s.profileSub}>@{player1.username}</p>
+                </div>
+              </div>
+              <div style={s.profileGrid}>
+                <div style={s.profileField}>
+                  <span style={s.profileLabel}>EMAIL</span>
+                  <span style={s.profileValue}>{player1.email || "—"}</span>
+                </div>
+                <div style={s.profileField}>
+                  <span style={s.profileLabel}>VICTORIAS</span>
+                  <span style={{ ...s.profileValue, color: "#4ecdc4" }}>{player1.wins ?? 0}</span>
+                </div>
+                <div style={s.profileField}>
+                  <span style={s.profileLabel}>PAÍS</span>
+                  <span style={s.profileValue}>{player1.country || "—"}</span>
+                </div>
+                <div style={s.profileField}>
+                  <span style={s.profileLabel}>GÉNERO</span>
+                  <span style={s.profileValue}>{player1.gender || "—"}</span>
+                </div>
+                <div style={s.profileField}>
+                  <span style={s.profileLabel}>NACIMIENTO</span>
+                  <span style={s.profileValue}>
+                    {player1.birthDate ? new Date(player1.birthDate).toLocaleDateString() : "—"}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Lista de oponentes */}
             <p style={s.formTitle}>Elige oponente (J2)</p>
             {users.length === 0 && (
               <p style={{ color: "#555", fontSize: "12px" }}>No hay otros jugadores registrados.</p>
@@ -232,6 +296,7 @@ export default function Home() {
             </button>
           </div>
         )}
+
       </div>
     </div>
   );
@@ -262,4 +327,22 @@ const s: Record<string, any> = {
   loggedIn: { background: "#0a1a0a", border: "1px solid #1a3a1a", borderRadius: "2px", padding: "10px 14px", fontSize: "13px", color: "#4caf50", marginBottom: "16px", letterSpacing: "1px" },
   userList: { display: "flex", flexDirection: "column" as const, gap: "6px", marginBottom: "12px" },
   userItem: { background: "#111", border: "1px solid #2a2a2a", borderRadius: "2px", padding: "10px 14px", color: "#aaa", fontFamily: "'Courier New', monospace", fontSize: "13px", cursor: "pointer", textAlign: "left" as const, letterSpacing: "1px" },
+  profile: {
+    background: "#111", border: "1px solid #2a2a2a", borderRadius: "2px",
+    padding: "16px", marginBottom: "20px",
+  },
+  profileHeader: {
+    display: "flex", alignItems: "center", gap: "12px", marginBottom: "14px",
+  },
+  avatar: {
+    width: "40px", height: "40px", background: "#2a2a2a", borderRadius: "2px",
+    display: "flex", alignItems: "center", justifyContent: "center",
+    fontSize: "18px", color: "#fff", fontWeight: "bold", flexShrink: 0,
+  },
+  profileName: { margin: 0, fontSize: "14px", color: "#fff", fontWeight: "bold" },
+  profileSub: { margin: 0, fontSize: "11px", color: "#555", letterSpacing: "1px" },
+  profileGrid: { display: "flex", flexDirection: "column" as const, gap: "8px" },
+  profileField: { display: "flex", justifyContent: "space-between", alignItems: "center" },
+  profileLabel: { fontSize: "10px", color: "#444", letterSpacing: "2px" },
+  profileValue: { fontSize: "12px", color: "#aaa", letterSpacing: "1px" },
 };
