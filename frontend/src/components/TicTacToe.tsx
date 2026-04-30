@@ -86,7 +86,7 @@ export default function TicTacToe({ player1, player2, onExit }: Props) {
     : `Turno: ${player2.username} (O)`;
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", padding: "40px", gap: "16px", fontFamily: "monospace", minHeight: "100vh", background: "#0f0f0f", color: "#fff" }}>
+    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", padding: "16px", gap: "12px", fontFamily: "monospace", color: "#fff", width: "100%" }}>
       <h2 style={{ letterSpacing: "4px", fontSize: "18px" }}>TIC TAC TOE</h2>
 
       <div style={{ display: "flex", gap: "24px", fontSize: "13px" }}>
