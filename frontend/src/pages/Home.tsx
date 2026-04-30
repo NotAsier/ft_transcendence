@@ -155,6 +155,7 @@ export default function Home() {
     setView("game");
   };
 
+  // ── GAME ──────────────────────────────────────────────────────────────────
   if (view === "game" && player1 && player2) {
     return (
       <TicTacToe
@@ -165,6 +166,155 @@ export default function Home() {
     );
   }
 
+  // ── LOBBY (pantalla completa, proporciones imagen) ────────────────────────
+  // Layout: col izq (perfil, ~25%) | col centro (acciones, ~45%) | col der (listas, ~25%)
+  // + barra inferior con título
+  if (view === "lobby" && player1) {
+    return (
+      <div style={{
+        display: "flex", flexDirection: "column",
+        width: "100vw", height: "100vh",
+        background: "#0f0f0f", fontFamily: "'Courier New', monospace",
+        boxSizing: "border-box", padding: 20, gap: 16,
+      }}>
+
+        {/* Fila principal: 3 columnas */}
+        <div style={{ display: "flex", flex: 1, gap: 16, minHeight: 0 }}>
+
+          {/* Columna izquierda: Perfil (~25%) */}
+          <div style={{
+            flex: "0 0 24%", background: "#1a1a1a", border: "1px solid #2a2a2a",
+            borderRadius: 8, padding: 24, display: "flex", flexDirection: "column", gap: 0,
+          }}>
+            {/* Avatar + nombre */}
+            <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", gap: 12, marginBottom: 24 }}>
+              <div style={{
+                width: 64, height: 64, background: "#2a2a2a", borderRadius: "50%",
+                display: "flex", alignItems: "center", justifyContent: "center",
+                fontSize: 26, color: "#fff", fontWeight: "bold", flexShrink: 0,
+              }}>
+                {player1.username[0].toUpperCase()}
+              </div>
+              <div>
+                <p style={{ margin: 0, fontSize: 15, color: "#fff", fontWeight: "bold", letterSpacing: 1 }}>
+                  {player1.displayName || player1.username}
+                </p>
+                <p style={{ margin: 0, fontSize: 11, color: "#555", letterSpacing: 1 }}>
+                  @{player1.username}
+                </p>
+              </div>
+            </div>
+
+            {/* Datos de perfil */}
+            <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+              <div>
+                <p style={s.profileLabel}>VICTORIAS</p>
+                <p style={{ ...s.profileValue, color: "#4ecdc4", fontWeight: 700, fontSize: 18, margin: 0 }}>
+                  {player1.wins ?? 0}
+                </p>
+              </div>
+              <div>
+                <p style={s.profileLabel}>EMAIL</p>
+                <p style={{ ...s.profileValue, margin: 0 }}>{player1.email || "—"}</p>
+              </div>
+              <div>
+                <p style={s.profileLabel}>PAÍS</p>
+                <p style={{ ...s.profileValue, margin: 0 }}>{player1.country || "—"}</p>
+              </div>
+              <div>
+                <p style={s.profileLabel}>GÉNERO</p>
+                <p style={{ ...s.profileValue, margin: 0 }}>{player1.gender || "—"}</p>
+              </div>
+              <div>
+                <p style={s.profileLabel}>CUMPLEAÑOS</p>
+                <p style={{ ...s.profileValue, margin: 0 }}>
+                  {player1.birthDate ? new Date(player1.birthDate).toLocaleDateString() : "—"}
+                </p>
+              </div>
+            </div>
+
+            {/* Cerrar sesión al fondo */}
+            <div style={{ marginTop: "auto", paddingTop: 24 }}>
+              <button
+                style={s.btnLink}
+                onClick={() => { setView("home"); setPlayer1(null); setUsers([]); }}
+              >
+                ← Cerrar sesión
+              </button>
+            </div>
+          </div>
+
+          {/* Columna centro: Acciones (~45%) */}
+          <div style={{
+            flex: "1 1 auto", background: "#1a1a1a", border: "1px solid #2a2a2a",
+            borderRadius: 8, padding: 32, display: "flex", flexDirection: "column",
+            alignItems: "center", justifyContent: "center", gap: 16,
+          }}>
+            <button style={{ ...s.btn, ...s.btnSecondary, maxWidth: 280 }}>
+              JUEGO LOCAL
+            </button>
+            <button style={{ ...s.btn, ...s.btnSecondary, maxWidth: 280 }}>
+              JUEGO vs IA
+            </button>
+            <button style={{ ...s.btn, ...s.btnSecondary, maxWidth: 280 }}>
+              MULTIJUGADOR
+            </button>
+          </div>
+
+          {/* Columna derecha: Listas (~25%) */}
+          <div style={{
+            flex: "0 0 24%", display: "flex", flexDirection: "column", gap: 16,
+          }}>
+            {/* Lista de jugadores (mitad superior) */}
+            <div style={{
+              flex: 1, background: "#1a1a1a", border: "1px solid #2a2a2a",
+              borderRadius: 8, padding: 16, display: "flex", flexDirection: "column", minHeight: 0,
+            }}>
+              <p style={{ ...s.profileLabel, marginBottom: 10 }}>LISTA DE JUGADORES</p>
+              <div style={{ flex: 1, overflowY: "auto" }}>
+                {users.length === 0 ? (
+                  <p style={{ color: "#444", fontSize: 12 }}>Sin jugadores online.</p>
+                ) : (
+                  <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                    {users.map(u => (
+                      <button key={u.id} style={{ ...s.userItem }} onClick={() => startGame(u)}>
+                        <span style={{ color: "#4ecdc4", marginRight: 8 }}>•</span>{u.username}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Lista de amigos (mitad inferior) */}
+            <div style={{
+              flex: 1, background: "#1a1a1a", border: "1px solid #2a2a2a",
+              borderRadius: 8, padding: 16, display: "flex", flexDirection: "column", minHeight: 0,
+            }}>
+              <p style={{ ...s.profileLabel, marginBottom: 10 }}>LISTA DE AMIGOS</p>
+              <div style={{ flex: 1, overflowY: "auto" }}>
+                <p style={{ color: "#444", fontSize: 12 }}>Sin amigos aún.</p>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        {/* Barra inferior: Título */}
+        <div style={{
+          background: "#1a1a1a", border: "1px solid #2a2a2a", borderRadius: 8,
+          padding: "16px 32px", display: "flex", alignItems: "center", justifyContent: "center",
+        }}>
+          <h1 style={{ margin: 0, fontSize: 22, fontWeight: "bold", letterSpacing: 6, color: "#fff" }}>
+            FT TRANSCENDENCE
+          </h1>
+        </div>
+
+      </div>
+    );
+  }
+
+  // ── HOME / LOGIN / REGISTER (card centrada) ───────────────────────────────
   return (
     <div style={s.wrapper}>
       <div style={s.card}>
@@ -241,62 +391,6 @@ export default function Home() {
           </div>
         )}
 
-        {/* LOBBY */}
-        {view === "lobby" && player1 && (
-          <div>
-            {/* Perfil */}
-            <div style={s.profile}>
-              <div style={s.profileHeader}>
-                <div style={s.avatar}>{player1.username[0].toUpperCase()}</div>
-                <div>
-                  <p style={s.profileName}>{player1.displayName || player1.username}</p>
-                  <p style={s.profileSub}>@{player1.username}</p>
-                </div>
-              </div>
-              <div style={s.profileGrid}>
-                <div style={s.profileField}>
-                  <span style={s.profileLabel}>EMAIL</span>
-                  <span style={s.profileValue}>{player1.email || "—"}</span>
-                </div>
-                <div style={s.profileField}>
-                  <span style={s.profileLabel}>VICTORIAS</span>
-                  <span style={{ ...s.profileValue, color: "#4ecdc4" }}>{player1.wins ?? 0}</span>
-                </div>
-                <div style={s.profileField}>
-                  <span style={s.profileLabel}>PAÍS</span>
-                  <span style={s.profileValue}>{player1.country || "—"}</span>
-                </div>
-                <div style={s.profileField}>
-                  <span style={s.profileLabel}>GÉNERO</span>
-                  <span style={s.profileValue}>{player1.gender || "—"}</span>
-                </div>
-                <div style={s.profileField}>
-                  <span style={s.profileLabel}>NACIMIENTO</span>
-                  <span style={s.profileValue}>
-                    {player1.birthDate ? new Date(player1.birthDate).toLocaleDateString() : "—"}
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            {/* Lista de oponentes */}
-            <p style={s.formTitle}>Elige oponente (J2)</p>
-            {users.length === 0 && (
-              <p style={{ color: "#555", fontSize: "12px" }}>No hay otros jugadores registrados.</p>
-            )}
-            <div style={s.userList}>
-              {users.map(u => (
-                <button key={u.id} style={s.userItem} onClick={() => startGame(u)}>
-                  <span style={{ color: "#4ecdc4" }}>O</span> {u.username}
-                </button>
-              ))}
-            </div>
-            <button style={s.btnLink} onClick={() => { setView("home"); setPlayer1(null); setUsers([]); }}>
-              ← Cerrar sesión
-            </button>
-          </div>
-        )}
-
       </div>
     </div>
   );
@@ -318,31 +412,13 @@ const s: Record<string, any> = {
   btn: { width: "100%", padding: "12px", fontSize: "12px", fontFamily: "'Courier New', monospace", letterSpacing: "3px", border: "none", borderRadius: "2px", cursor: "pointer", fontWeight: "bold", marginTop: "8px" },
   btnPrimary: { background: "#fff", color: "#000" },
   btnSecondary: { background: "#1e1e1e", color: "#aaa", border: "1px solid #333" },
-  btnLink: { background: "transparent", border: "none", color: "#555", fontSize: "12px", fontFamily: "'Courier New', monospace", cursor: "pointer", letterSpacing: "1px", marginTop: "8px", padding: "8px 0", width: "100%" },
+  btnLink: { background: "transparent", border: "none", color: "#555", fontSize: "12px", fontFamily: "'Courier New', monospace", cursor: "pointer", letterSpacing: "1px", padding: "8px 0", width: "100%" },
   form: { display: "flex", flexDirection: "column" as const, gap: "4px" },
   formTitle: { fontSize: "13px", color: "#aaa", letterSpacing: "2px", textTransform: "uppercase" as const, marginBottom: "12px" },
   label: { fontSize: "10px", letterSpacing: "2px", color: "#555", marginTop: "8px" },
   input: { padding: "9px 12px", background: "#111", border: "1px solid #2a2a2a", borderRadius: "2px", color: "#fff", fontFamily: "'Courier New', monospace", fontSize: "13px", outline: "none", width: "100%", boxSizing: "border-box" as const },
   error: { background: "#2a1515", border: "1px solid #ff4444", borderRadius: "2px", padding: "8px 12px", fontSize: "12px", color: "#ff6666", marginBottom: "8px", letterSpacing: "1px" },
-  loggedIn: { background: "#0a1a0a", border: "1px solid #1a3a1a", borderRadius: "2px", padding: "10px 14px", fontSize: "13px", color: "#4caf50", marginBottom: "16px", letterSpacing: "1px" },
-  userList: { display: "flex", flexDirection: "column" as const, gap: "6px", marginBottom: "12px" },
-  userItem: { background: "#111", border: "1px solid #2a2a2a", borderRadius: "2px", padding: "10px 14px", color: "#aaa", fontFamily: "'Courier New', monospace", fontSize: "13px", cursor: "pointer", textAlign: "left" as const, letterSpacing: "1px" },
-  profile: {
-    background: "#111", border: "1px solid #2a2a2a", borderRadius: "2px",
-    padding: "16px", marginBottom: "20px",
-  },
-  profileHeader: {
-    display: "flex", alignItems: "center", gap: "12px", marginBottom: "14px",
-  },
-  avatar: {
-    width: "40px", height: "40px", background: "#2a2a2a", borderRadius: "2px",
-    display: "flex", alignItems: "center", justifyContent: "center",
-    fontSize: "18px", color: "#fff", fontWeight: "bold", flexShrink: 0,
-  },
-  profileName: { margin: 0, fontSize: "14px", color: "#fff", fontWeight: "bold" },
-  profileSub: { margin: 0, fontSize: "11px", color: "#555", letterSpacing: "1px" },
-  profileGrid: { display: "flex", flexDirection: "column" as const, gap: "8px" },
-  profileField: { display: "flex", justifyContent: "space-between", alignItems: "center" },
-  profileLabel: { fontSize: "10px", color: "#444", letterSpacing: "2px" },
+  userItem: { background: "#111", border: "1px solid #2a2a2a", borderRadius: "2px", padding: "8px 12px", color: "#aaa", fontFamily: "'Courier New', monospace", fontSize: "12px", cursor: "pointer", textAlign: "left" as const, letterSpacing: "1px", width: "100%" },
+  profileLabel: { fontSize: "10px", color: "#444", letterSpacing: "2px", margin: "0 0 2px 0", textTransform: "uppercase" as const },
   profileValue: { fontSize: "12px", color: "#aaa", letterSpacing: "1px" },
 };
