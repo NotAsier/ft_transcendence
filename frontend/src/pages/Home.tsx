@@ -81,21 +81,17 @@ export default function Home() {
     return Array.isArray(data) ? data : [];
   }, []);
 
-  // Recalcula el mapa de status para cada usuario en la lista
-  const buildStatusMap = useCallback(
-    (allUsers: User[], friendList: User[], pendingReqs: FriendRequest[], _myId: number) => {
-      const map: Record<number, FriendStatus> = {};
-      const friendIds = new Set(friendList.map(f => f.id));
-      const receivedIds = new Set(pendingReqs.map(r => r.fromUser.id));
-
-      allUsers.forEach(u => {
-        if (friendIds.has(u.id))        map[u.id] = "friends";
-        else if (receivedIds.has(u.id)) map[u.id] = "pending_received";
-        else                            map[u.id] = "none";
-      });
-      return map;
-    }, []
-  );
+  const buildStatusMap = useCallback((allUsers: User[], friendList: User[], pendingReqs: FriendRequest[]) => {
+    const map: Record<number, FriendStatus> = {};
+    const friendIds   = new Set(friendList.map(f => f.id));
+    const receivedIds = new Set(pendingReqs.map(r => r.fromUser.id));
+    allUsers.forEach(u => {
+      if (friendIds.has(u.id))        map[u.id] = "friends";
+      else if (receivedIds.has(u.id)) map[u.id] = "pending_received";
+      else                            map[u.id] = "none";
+    });
+    return map;
+  }, []);
 
   const refreshSocial = useCallback(async (token: string, allUsers: User[], myId: number) => {
     const [friendList, reqs] = await Promise.all([
@@ -289,21 +285,9 @@ export default function Home() {
           <div style={{ flex: "1 1 auto", background: "#1a1a1a", border: "1px solid #2a2a2a",
             borderRadius: 8, padding: 32, display: "flex", flexDirection: "column",
             alignItems: "center", justifyContent: "center", gap: 16 }}>
-            {player2 ? (
-              <TicTacToe
-                player1={player1}
-                player2={player2}
-                onExit={() => setPlayer2(null)}
-              />
-            ) : (
-              <>
-                <p style={{ color: "#aaa", fontSize: 13, letterSpacing: 2, marginBottom: 8 }}>MODO DE JUEGO</p>
-                <button style={{ ...s.btn, ...s.btnSecondary, maxWidth: 280 }}>JUEGO LOCAL</button>
-                <button style={{ ...s.btn, ...s.btnSecondary, maxWidth: 280 }}>JUEGO vs IA</button>
-                <button style={{ ...s.btn, ...s.btnSecondary, maxWidth: 280 }}>MULTIJUGADOR</button>
-                <p style={{ color: "#333", fontSize: 11, marginTop: 8 }}>Elige un amigo de la lista para jugar</p>
-              </>
-            )}
+            <button style={{ ...s.btn, ...s.btnSecondary, maxWidth: 280 }}>JUEGO LOCAL</button>
+            <button style={{ ...s.btn, ...s.btnSecondary, maxWidth: 280 }}>JUEGO vs IA</button>
+            <button style={{ ...s.btn, ...s.btnSecondary, maxWidth: 280 }}>MULTIJUGADOR</button>
           </div>
 
           {/* Columna derecha: Listas */}
