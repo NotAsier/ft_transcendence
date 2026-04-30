@@ -88,6 +88,14 @@ export class UserService {
     });
   }
 
+  //para ver la info de usuario selecionado
+  async getUser(id: number) {
+  return this.prisma.user.findUnique({
+    where: { id },
+    select: { id: true, username: true, displayName: true, country: true, gender: true, birthDate: true, wins: true, createdAt: true },
+  });
+}
+
   // Lista de amigos aceptados
   async getFriends(userId: number) {
     const friendships = await this.prisma.friendship.findMany({

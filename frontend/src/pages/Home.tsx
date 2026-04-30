@@ -28,26 +28,29 @@ const COUNTRIES = [
 type View = "home" | "login" | "register" | "lobby" | "game";
 
 interface User { id: number; username: string; }
+interface UserProfile {
+  id: number; username: string; displayName?: string; country?: string;
+  gender?: string; birthDate?: string; wins?: number;
+}
 interface Player {
   id: number; username: string; token: string;
   email?: string; displayName?: string; country?: string;
   gender?: string; birthDate?: string; wins?: number;
 }
 interface FriendRequest { id: number; fromUser: User; }
-
-// Estado de relación de un usuario respecto al player1
 type FriendStatus = "none" | "pending_sent" | "pending_received" | "friends";
 
 export default function Home() {
-  const [view, setView]       = useState<View>("home");
-  const [player1, setPlayer1] = useState<Player | null>(null);
-  const [player2, setPlayer2] = useState<User | null>(null);
-  const [users, setUsers]     = useState<User[]>([]);
-  const [friends, setFriends] = useState<User[]>([]);
+  const [view, setView]         = useState<View>("home");
+  const [player1, setPlayer1]   = useState<Player | null>(null);
+  const [player2, setPlayer2]   = useState<User | null>(null);
+  const [users, setUsers]       = useState<User[]>([]);
+  const [friends, setFriends]   = useState<User[]>([]);
   const [requests, setRequests] = useState<FriendRequest[]>([]);
   const [friendStatus, setFriendStatus] = useState<Record<number, FriendStatus>>({});
-  const [error, setError]     = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [error, setError]       = useState<string | null>(null);
+  const [loading, setLoading]   = useState(false);
+  const [selectedProfile, setSelectedProfile] = useState<UserProfile | null>(null);
 
   const [loginEmail, setLoginEmail]       = useState("");
   const [loginPassword, setLoginPassword] = useState("");
@@ -58,7 +61,6 @@ export default function Home() {
   const [regCountry, setRegCountry]       = useState("");
   const [regGender, setRegGender]         = useState("");
 
-  // ── Helpers ────────────────────────────────────────────────────────────────
   const authHeader = (token: string) => ({ Authorization: `Bearer ${token}` });
 
   const fetchUsers = async (token: string) => {
@@ -79,23 +81,18 @@ export default function Home() {
     return Array.isArray(data) ? data : [];
   }, []);
 
-  // Recalcula el mapa de status para cada usuario en la lista
-  const buildStatusMap = useCallback(
-    (allUsers: User[], friendList: User[], pendingReqs: FriendRequest[], myId: number) => {
-      const map: Record<number, FriendStatus> = {};
-      const friendIds = new Set(friendList.map(f => f.id));
-      const receivedIds = new Set(pendingReqs.map(r => r.fromUser.id));
+  const buildStatusMap = useCallback((allUsers: User[], friendList: User[], pendingReqs: FriendRequest[]) => {
+    const map: Record<number, FriendStatus> = {};
+    const friendIds   = new Set(friendList.map(f => f.id));
+    const receivedIds = new Set(pendingReqs.map(r => r.fromUser.id));
+    allUsers.forEach(u => {
+      if (friendIds.has(u.id))        map[u.id] = "friends";
+      else if (receivedIds.has(u.id)) map[u.id] = "pending_received";
+      else                            map[u.id] = "none";
+    });
+    return map;
+  }, []);
 
-      allUsers.forEach(u => {
-        if (friendIds.has(u.id))        map[u.id] = "friends";
-        else if (receivedIds.has(u.id)) map[u.id] = "pending_received";
-        else                            map[u.id] = "none";
-      });
-      return map;
-    }, []
-  );
-
-  // Refresca amigos + peticiones y recalcula status
   const refreshSocial = useCallback(async (token: string, allUsers: User[], myId: number) => {
     const [friendList, reqs] = await Promise.all([
       fetchFriends(token),
@@ -103,10 +100,9 @@ export default function Home() {
     ]);
     setFriends(friendList);
     setRequests(reqs);
-    setFriendStatus(buildStatusMap(allUsers, friendList, reqs, myId));
+    setFriendStatus(buildStatusMap(allUsers, friendList, reqs));
   }, [fetchFriends, fetchRequests, buildStatusMap]);
 
-  // Polling cada 5s para actualizaciones en tiempo real
   useEffect(() => {
     if (!player1) return;
     const interval = setInterval(() => {
@@ -115,7 +111,6 @@ export default function Home() {
     return () => clearInterval(interval);
   }, [player1, users, refreshSocial]);
 
-  // ── Auth ───────────────────────────────────────────────────────────────────
   const handleLogin = async () => {
     setLoading(true); setError(null);
     try {
@@ -143,7 +138,7 @@ export default function Home() {
   const handleRegister = async () => {
     setLoading(true); setError(null);
     try {
-      const res  = await fetch(`${API}/auth/register`, {
+      const res = await fetch(`${API}/auth/register`, {
         method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: regEmail, username: regUsername, password: regPassword,
           birthDate: regBirthDate || undefined, country: regCountry || undefined, gender: regGender || undefined }),
@@ -165,13 +160,11 @@ export default function Home() {
     setLoading(false);
   };
 
-  // ── Acciones de amistad ────────────────────────────────────────────────────
   const sendRequest = async (toUserId: number) => {
     if (!player1) return;
     await fetch(`${API}/user/friends/request/${toUserId}`, {
       method: "POST", headers: authHeader(player1.token),
     });
-    // Optimistic update
     setFriendStatus(prev => ({ ...prev, [toUserId]: "pending_sent" }));
   };
 
@@ -193,6 +186,13 @@ export default function Home() {
 
   const startGame = (opponent: User) => { setPlayer2(opponent); setView("game"); };
 
+  const loadProfile = async (userId: number) => {
+    if (!player1) return;
+    const res = await fetch(`${API}/user/${userId}`, { headers: authHeader(player1.token) });
+    const data = await res.json();
+    setSelectedProfile(data);
+  };
+
   // ── GAME ───────────────────────────────────────────────────────────────────
   if (view === "game" && player1 && player2) {
     return (
@@ -203,49 +203,81 @@ export default function Home() {
 
   // ── LOBBY ──────────────────────────────────────────────────────────────────
   if (view === "lobby" && player1) {
+    const profileData = selectedProfile ?? player1;
+
     return (
       <div style={{ display: "flex", flexDirection: "column", width: "100vw", height: "100vh",
         background: "#0f0f0f", fontFamily: "'Courier New', monospace",
         boxSizing: "border-box", padding: 20, gap: 16 }}>
 
-        {/* Fila principal */}
         <div style={{ display: "flex", flex: 1, gap: 16, minHeight: 0 }}>
 
           {/* Columna izquierda: Perfil */}
           <div style={{ flex: "0 0 24%", background: "#1a1a1a", border: "1px solid #2a2a2a",
             borderRadius: 8, padding: 24, display: "flex", flexDirection: "column" }}>
+
+            {/* Avatar y nombre */}
             <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", gap: 12, marginBottom: 24 }}>
               <div style={{ width: 64, height: 64, background: "#2a2a2a", borderRadius: "50%",
                 display: "flex", alignItems: "center", justifyContent: "center",
                 fontSize: 26, color: "#fff", fontWeight: "bold" }}>
-                {player1.username[0].toUpperCase()}
+                {profileData.username[0].toUpperCase()}
               </div>
               <div>
-                <p style={{ margin: 0, fontSize: 15, color: "#fff", fontWeight: "bold", letterSpacing: 1 }}>
-                  {player1.displayName || player1.username}
+                <p style={{ margin: 0, fontSize: 15, fontWeight: "bold", letterSpacing: 1,
+                  color: selectedProfile ? "#4ecdc4" : "#fff" }}>
+                  {profileData.displayName || profileData.username}
                 </p>
-                <p style={{ margin: 0, fontSize: 11, color: "#555", letterSpacing: 1 }}>@{player1.username}</p>
+                <p style={{ margin: 0, fontSize: 11, color: "#555", letterSpacing: 1 }}>
+                  @{profileData.username}
+                </p>
               </div>
             </div>
+
+            {/* Datos */}
             <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-              {[
-                ["VICTORIAS", <span style={{ color: "#4ecdc4", fontWeight: 700 }}>{player1.wins ?? 0}</span>],
-                ["EMAIL",     player1.email || "—"],
-                ["PAÍS",      player1.country || "—"],
-                ["GÉNERO",    player1.gender || "—"],
-                ["CUMPLEAÑOS", player1.birthDate ? new Date(player1.birthDate).toLocaleDateString() : "—"],
-              ].map(([label, value]) => (
-                <div key={label as string}>
-                  <p style={s.profileLabel}>{label}</p>
-                  <p style={{ ...s.profileValue, margin: 0 }}>{value}</p>
-                </div>
-              ))}
+              {selectedProfile ? (
+                // Perfil de otro usuario (sin email)
+                [
+                  ["VICTORIAS", <span style={{ color: "#4ecdc4", fontWeight: 700 }}>{selectedProfile.wins ?? 0}</span>],
+                  ["PAÍS",      selectedProfile.country || "—"],
+                  ["GÉNERO",    selectedProfile.gender || "—"],
+                  ["CUMPLEAÑOS", selectedProfile.birthDate ? new Date(selectedProfile.birthDate).toLocaleDateString() : "—"],
+                ].map(([label, value]) => (
+                  <div key={label as string}>
+                    <p style={s.profileLabel}>{label}</p>
+                    <p style={{ ...s.profileValue, margin: 0 }}>{value}</p>
+                  </div>
+                ))
+              ) : (
+                // Perfil propio (con email)
+                [
+                  ["VICTORIAS", <span style={{ color: "#4ecdc4", fontWeight: 700 }}>{player1.wins ?? 0}</span>],
+                  ["EMAIL",     player1.email || "—"],
+                  ["PAÍS",      player1.country || "—"],
+                  ["GÉNERO",    player1.gender || "—"],
+                  ["CUMPLEAÑOS", player1.birthDate ? new Date(player1.birthDate).toLocaleDateString() : "—"],
+                ].map(([label, value]) => (
+                  <div key={label as string}>
+                    <p style={s.profileLabel}>{label}</p>
+                    <p style={{ ...s.profileValue, margin: 0 }}>{value}</p>
+                  </div>
+                ))
+              )}
             </div>
-            <div style={{ marginTop: "auto", paddingTop: 24 }}>
-              <button style={s.btnLink}
-                onClick={() => { setView("home"); setPlayer1(null); setUsers([]); setFriends([]); setRequests([]); }}>
-                ← Cerrar sesión
-              </button>
+
+            {/* Botones abajo */}
+            <div style={{ marginTop: "auto", paddingTop: 24, display: "flex", flexDirection: "column", gap: 4 }}>
+              {selectedProfile ? (
+                <button style={s.btnLink} onClick={() => setSelectedProfile(null)}>
+                  ← Mi perfil
+                </button>
+              ) : (
+                <button style={s.btnLink}
+                  onClick={() => { setView("home"); setPlayer1(null); setUsers([]); setFriends([]); setRequests([]); }}>
+                  ← Cerrar sesión
+                </button>
+              )}
             </div>
           </div>
 
@@ -274,7 +306,10 @@ export default function Home() {
                         <div key={u.id} style={{ display: "flex", alignItems: "center",
                           justifyContent: "space-between", padding: "6px 0",
                           borderBottom: "1px solid #222" }}>
-                          <span style={{ color: "#aaa", fontSize: 12, letterSpacing: 1 }}>
+                          <span
+                            style={{ color: "#aaa", fontSize: 12, letterSpacing: 1, cursor: "pointer" }}
+                            onClick={() => loadProfile(u.id)}
+                          >
                             {status === "friends" && <span style={{ color: "#4ecdc4", marginRight: 6 }}>♥</span>}
                             {u.username}
                           </span>
@@ -309,14 +344,18 @@ export default function Home() {
             <div style={{ flex: 1, background: "#1a1a1a", border: "1px solid #2a2a2a",
               borderRadius: 8, padding: 16, display: "flex", flexDirection: "column", minHeight: 0 }}>
               <p style={{ ...s.profileLabel, marginBottom: 10 }}>LISTA DE AMIGOS</p>
-              {/* Peticiones pendientes recibidas */}
               {requests.length > 0 && (
                 <div style={{ marginBottom: 10 }}>
                   <p style={{ ...s.profileLabel, color: "#ff9944", marginBottom: 6 }}>PETICIONES ({requests.length})</p>
                   {requests.map(r => (
                     <div key={r.id} style={{ display: "flex", alignItems: "center",
                       justifyContent: "space-between", padding: "4px 0" }}>
-                      <span style={{ color: "#aaa", fontSize: 12 }}>{r.fromUser.username}</span>
+                      <span
+                        style={{ color: "#aaa", fontSize: 12, cursor: "pointer" }}
+                        onClick={() => loadProfile(r.fromUser.id)}
+                      >
+                        {r.fromUser.username}
+                      </span>
                       <div style={{ display: "flex", gap: 4 }}>
                         <button style={{ ...s.btnSmall, background: "#1a3a1a", color: "#4caf50", borderColor: "#2a4a2a" }}
                           onClick={() => acceptRequest(r.fromUser.id)}>✓</button>
@@ -335,7 +374,12 @@ export default function Home() {
                       <div key={f.id} style={{ display: "flex", alignItems: "center",
                         justifyContent: "space-between", padding: "6px 0",
                         borderBottom: "1px solid #222" }}>
-                        <span style={{ color: "#4ecdc4", fontSize: 12, letterSpacing: 1 }}>♥ {f.username}</span>
+                        <span
+                          style={{ color: "#4ecdc4", fontSize: 12, letterSpacing: 1, cursor: "pointer" }}
+                          onClick={() => loadProfile(f.id)}
+                        >
+                          ♥ {f.username}
+                        </span>
                         <div style={{ display: "flex", gap: 4 }}>
                           <button style={{ ...s.btnSmall }} onClick={() => startGame(f)} title="Jugar">▶</button>
                           <button style={{ ...s.btnSmall, color: "#555", borderColor: "#333" }}
@@ -350,7 +394,7 @@ export default function Home() {
           </div>
         </div>
 
-        {/* Barra inferior: Título */}
+        {/* Barra inferior */}
         <div style={{ background: "#1a1a1a", border: "1px solid #2a2a2a", borderRadius: 8,
           padding: "16px 32px", display: "flex", alignItems: "center", justifyContent: "center" }}>
           <h1 style={{ margin: 0, fontSize: 22, fontWeight: "bold", letterSpacing: 6, color: "#fff" }}>

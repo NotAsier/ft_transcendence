@@ -49,4 +49,10 @@ export class UserController {
   removeFriend(@Request() req, @Param('id', ParseIntPipe) otherUserId: number) {
     return this.userService.removeFriend(req.user.userId, otherUserId);
   }
+
+  	//para que se vea la info de usuario
+  @Get(':id')
+	getUser(@Param('id', ParseIntPipe) id: number) {
+  	return this.userService.getUser(id);
+}
 }
