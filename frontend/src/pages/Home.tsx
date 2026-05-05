@@ -266,15 +266,7 @@ export default function Home() {
     return () => { socketRef.current?.off("directHistory", handler); };
   }, [chatWith, player1]);
 
-  const startGame = (opponent: User) => { setPlayer2(opponent); setView("game"); };
-
-  // ── GAME ───────────────────────────────────────────────────────────────────
-  if (view === "game" && player1 && player2) {
-    return (
-      <TicTacToe player1={player1} player2={player2}
-        onExit={() => { setView("lobby"); setPlayer2(null); }} />
-    );
-  }
+  const startGame = (opponent: User) => { setPlayer2(opponent); };
 
   // ── LOBBY ──────────────────────────────────────────────────────────────────
   if (view === "lobby" && player1) {
@@ -351,13 +343,25 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Columna centro: Acciones */}
+          {/* Columna centro: Juego o menú */}
           <div style={{ flex: "1 1 auto", background: "#1a1a1a", border: "1px solid #2a2a2a",
             borderRadius: 8, padding: 32, display: "flex", flexDirection: "column",
             alignItems: "center", justifyContent: "center", gap: 16 }}>
-            <button style={{ ...s.btn, ...s.btnSecondary, maxWidth: 280 }}>JUEGO LOCAL</button>
-            <button style={{ ...s.btn, ...s.btnSecondary, maxWidth: 280 }}>JUEGO vs IA</button>
-            <button style={{ ...s.btn, ...s.btnSecondary, maxWidth: 280 }}>MULTIJUGADOR</button>
+            {player2 ? (
+              <TicTacToe
+                player1={player1}
+                player2={player2}
+                onExit={() => setPlayer2(null)}
+              />
+            ) : (
+              <>
+                <p style={{ color: "#aaa", fontSize: 13, letterSpacing: 2, marginBottom: 8 }}>MODO DE JUEGO</p>
+                <button style={{ ...s.btn, ...s.btnSecondary, maxWidth: 280 }}>JUEGO LOCAL</button>
+                <button style={{ ...s.btn, ...s.btnSecondary, maxWidth: 280 }}>JUEGO vs IA</button>
+                <button style={{ ...s.btn, ...s.btnSecondary, maxWidth: 280 }}>MULTIJUGADOR</button>
+                <p style={{ color: "#333", fontSize: 11, marginTop: 8 }}>Elige un amigo de la lista para jugar</p>
+              </>
+            )}
           </div>
 
           {/* Columna derecha: Listas */}
