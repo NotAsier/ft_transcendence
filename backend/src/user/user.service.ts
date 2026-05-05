@@ -25,6 +25,9 @@ export class UserService {
 
   async getAll() {
     return this.prisma.user.findMany({
+      where: {
+        username: { not: 'Guest' },
+      },
       select: { id: true, username: true },
     });
   }
@@ -115,4 +118,11 @@ export class UserService {
       f.fromUserId === userId ? f.toUser : f.fromUser
     );
   }
+  async getGuest() {
+    return this.prisma.user.findUnique({
+      where: { username: 'Guest' },
+      select: { id: true, username: true },
+    });
+  }
+
 }

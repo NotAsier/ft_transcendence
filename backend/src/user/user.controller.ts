@@ -50,9 +50,15 @@ export class UserController {
     return this.userService.removeFriend(req.user.userId, otherUserId);
   }
 
+    @Get('guest')
+    getGuest() {
+    return this.userService.getGuest();
+  }
+
   	//para que se vea la info de usuario
   @Get(':id')
 	getUser(@Param('id', ParseIntPipe) id: number) {
   	return this.userService.getUser(id);
-}
+  }
+
 }

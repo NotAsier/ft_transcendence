@@ -268,6 +268,13 @@ export default function Home() {
 
   const startGame = (opponent: User) => { setPlayer2(opponent); };
 
+  const startLocalGame = async () => {
+    if (!player1) return;
+    const res = await fetch(`${API}/user/guest`, { headers: authHeader(player1.token) });
+    const guest = await res.json();
+    if (guest?.id) setPlayer2(guest);
+  };
+
   // ── LOBBY ──────────────────────────────────────────────────────────────────
   if (view === "lobby" && player1) {
     const profileData = selectedProfile ?? player1;
@@ -356,7 +363,7 @@ export default function Home() {
             ) : (
               <>
                 <p style={{ color: "#aaa", fontSize: 13, letterSpacing: 2, marginBottom: 8 }}>MODO DE JUEGO</p>
-                <button style={{ ...s.btn, ...s.btnSecondary, maxWidth: 280 }}>JUEGO LOCAL</button>
+                <button style={{ ...s.btn, ...s.btnSecondary, maxWidth: 280 }} onClick={startLocalGame}>JUEGO LOCAL</button>
                 <button style={{ ...s.btn, ...s.btnSecondary, maxWidth: 280 }}>JUEGO vs IA</button>
                 <button style={{ ...s.btn, ...s.btnSecondary, maxWidth: 280 }}>MULTIJUGADOR</button>
                 <p style={{ color: "#333", fontSize: 11, marginTop: 8 }}>Elige un amigo de la lista para jugar</p>
