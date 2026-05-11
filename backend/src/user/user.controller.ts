@@ -55,6 +55,10 @@ export class UserController {
     return this.userService.getGuest();
   }
 
+  @Get('leaderboard')
+    getLeaderboard() {
+    return this.userService.getLeaderboard();
+  }
   	//para que se vea la info de usuario
   @Get(':id')
 	getUser(@Param('id', ParseIntPipe) id: number) {

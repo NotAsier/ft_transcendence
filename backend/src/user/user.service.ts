@@ -124,5 +124,14 @@ export class UserService {
       select: { id: true, username: true },
     });
   }
+  async getLeaderboard() {
+    return this.prisma.user.findMany({
+      where: { username: { not: 'Guest' } },
+      select: { id: true, username: true, displayName: true, wins: true, country: true },
+      orderBy: { wins: 'desc' },
+      take: 10,
+    });
+  }
+
 
 }
