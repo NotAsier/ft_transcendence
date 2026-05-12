@@ -42,6 +42,22 @@ export default function LoginView({ onSuccess, onBack, loading, error }: LoginVi
       <button style={{ ...s.btn, ...s.btnPrimary }} onClick={handleSubmit} disabled={loading}>
         {loading ? "Entrando..." : "Entrar"}
       </button>
+
+      {/* Separador */}
+      <div style={{ display: "flex", alignItems: "center", gap: 8, margin: "4px 0" }}>
+        <div style={{ flex: 1, height: 1, background: "#2a2a2a" }} />
+        <span style={{ color: "#444", fontSize: 10, letterSpacing: 2 }}>O</span>
+        <div style={{ flex: 1, height: 1, background: "#2a2a2a" }} />
+      </div>
+
+      {/* Botón Google */}
+      <button
+        style={{ ...s.btn, ...s.btnSecondary }}
+        onClick={() => { window.location.href = "/api/auth/google"; }}
+      >
+        CONTINUAR CON GOOGLE
+      </button>
+
       <button style={s.btnLink} onClick={onBack}>← Volver</button>
     </div>
   );

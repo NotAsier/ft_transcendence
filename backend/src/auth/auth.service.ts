@@ -25,16 +25,14 @@ export class AuthService {
     if (usernameExists) throw new ConflictException('Username ya en uso');
 
     if (birthDate) {
-    const date = new Date(birthDate);
-    if (isNaN(date.getTime())) throw new BadRequestException('Fecha de nacimiento inválida');
-    const minAge = new Date();
+      const date = new Date(birthDate);
+      if (isNaN(date.getTime())) throw new BadRequestException('Fecha de nacimiento inválida');
+      const minAge = new Date();
       minAge.setFullYear(minAge.getFullYear() - 120);
-    if(minAge > date)
-      throw new BadRequestException('mu viejo');
-    const today = new Date();
-    if (date > today)
-      throw new BadRequestException('futurama');
-}
+      if (minAge > date) throw new BadRequestException('mu viejo');
+      const today = new Date();
+      if (date > today) throw new BadRequestException('futurama');
+    }
 
     const hash = await bcrypt.hash(password, 10);
     const user = await this.prisma.user.create({
@@ -59,6 +57,55 @@ export class AuthService {
 
     const valid = await bcrypt.compare(password, user.password);
     if (!valid) throw new UnauthorizedException('Credenciales incorrectas');
+
+    return this.signToken(user.id, user.email);
+  }
+
+  async findOrCreateGoogleUser(profile: {
+    googleId:    string;
+    email:       string | null;
+    displayName: string | null;
+    avatarUrl:   string | null;
+  }) {
+    // 1. ¿Ya existe por oauthId?
+    let user = await this.prisma.user.findUnique({
+      where: { oauthId: profile.googleId },
+    });
+    if (user) return this.signToken(user.id, user.email);
+
+    // 2. ¿Existe ya una cuenta con ese email? → vincularla
+    if (profile.email) {
+      user = await this.prisma.user.findUnique({
+        where: { email: profile.email },
+      });
+      if (user) {
+        user = await this.prisma.user.update({
+          where: { id: user.id },
+          data: { oauthId: profile.googleId, oauthProvider: 'google' },
+        });
+        return this.signToken(user.id, user.email);
+      }
+    }
+
+    // 3. Usuario completamente nuevo
+    const base     = (profile.email?.split('@')[0] ?? 'user').replace(/[^a-z0-9]/gi, '');
+    let username   = base;
+    let suffix     = 1;
+    while (await this.prisma.user.findUnique({ where: { username } })) {
+      username = `${base}${suffix++}`;
+    }
+
+    user = await this.prisma.user.create({
+      data: {
+        email:         profile.email ?? `google_${profile.googleId}@noemail.local`,
+        username,
+        displayName:   profile.displayName,
+        avatarUrl:     profile.avatarUrl,
+        oauthId:       profile.googleId,
+        oauthProvider: 'google',
+        password:      null,
+      },
+    });
 
     return this.signToken(user.id, user.email);
   }

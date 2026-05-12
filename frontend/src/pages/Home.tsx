@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import type { View, Player, User, UserProfile } from "../types";
 import { useSocial } from "../hooks/useSocial";
 import { useSocket } from "../hooks/useSocket";
@@ -49,6 +49,30 @@ export default function Home() {
     users, friends, requests, friendStatus,
     initSocial, sendRequest, acceptRequest, removeFriend, loadProfile,
   } = useSocial(player1);
+
+  // ── Google OAuth redirect ─────────────────────────────────────────────
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const token  = params.get("token");
+    if (!token) return;
+
+    window.history.replaceState({}, "", "/");
+
+    fetch(`${API}/user/me`, { headers: authHeader(token) })
+      .then((r) => r.json())
+      .then(async (me) => {
+        const p1: Player = {
+          id: me.id, username: me.username, token,
+          email: me.email, displayName: me.displayName,
+          country: me.country, gender: me.gender,
+          birthDate: me.birthDate, wins: me.wins,
+        };
+        setPlayer1(p1);
+        await initSocial(token, me.id);
+        setView("lobby");
+      })
+      .catch(() => setError("Error al iniciar sesion con Google"));
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Socket hook ──────────────────────────────────────────────────────────────
   const socketRef = useSocket({
