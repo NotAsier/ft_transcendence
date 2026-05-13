@@ -14,6 +14,22 @@ interface LeaderboardEntry {
   country?: string;
 }
 
+interface GameHistoryEntry {
+  id: number;
+  isVsAI: boolean;
+  player1: { id: number; username: string; displayName?: string };
+  player2: { id: number; username: string; displayName?: string } | null;
+  winner: string | null;
+  board: string;
+  score1: number;
+  score2: number;
+  playedAt: string;
+  finishedAt: string | null;
+  result: "win" | "loss" | "draw";
+  opponentName: string;
+  playerMark: "X" | "O";
+}
+
 interface GameCenterProps {
   player1: Player;
   player2: User | null;
@@ -45,6 +61,10 @@ export default function GameCenter({
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [loadingLB, setLoadingLB] = useState(false);
 
+  const [showHistory, setShowHistory] = useState(false);
+  const [history, setHistory] = useState<GameHistoryEntry[]>([]);
+  const [loadingHistory, setLoadingHistory] = useState(false);
+
   const openLeaderboard = async () => {
     setShowLeaderboard(true);
     setLoadingLB(true);
@@ -58,6 +78,27 @@ export default function GameCenter({
       setLeaderboard([]);
     }
     setLoadingLB(false);
+  };
+
+  const openHistory = async () => {
+    setShowHistory(true);
+    setLoadingHistory(true);
+    console.log("=== OPEN HISTORY ===");
+    console.log("Token:", player1.token);
+    console.log("Player ID:", player1.id);
+    try {
+      const res = await fetch(`${API}/game/history/me`, {
+        headers: { Authorization: `Bearer ${player1.token}` },
+      });
+      console.log("Response status:", res.status);
+      const data = await res.json();
+      console.log("Raw data:", JSON.stringify(data, null, 2));
+      setHistory(Array.isArray(data) ? data : []);
+    } catch (e) {
+      console.error("Fetch error:", e);
+      setHistory([]);
+    }
+    setLoadingHistory(false);
   };
 
   if (showLeaderboard) {
@@ -79,9 +120,10 @@ export default function GameCenter({
           <p style={{ color: "#444", fontSize: 12, textAlign: "center", marginTop: 40 }}>Sin datos aún.</p>
         ) : (
           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-            {/* Cabecera */}
-            <div style={{ display: "grid", gridTemplateColumns: "32px 1fr auto auto",
-              gap: 12, padding: "6px 12px", borderBottom: "1px solid #2a2a2a" }}>
+            <div style={{
+              display: "grid", gridTemplateColumns: "32px 1fr auto auto",
+              gap: 12, padding: "6px 12px", borderBottom: "1px solid #2a2a2a",
+            }}>
               <span style={{ fontSize: 10, color: "#444", letterSpacing: 2 }}>#</span>
               <span style={{ fontSize: 10, color: "#444", letterSpacing: 2 }}>JUGADOR</span>
               <span style={{ fontSize: 10, color: "#444", letterSpacing: 2 }}>PAÍS</span>
@@ -104,11 +146,85 @@ export default function GameCenter({
                 </span>
                 <span style={{ fontSize: 12, color: entry.id === player1.id ? "#4caf50" : "#aaa", letterSpacing: 1 }}>
                   {entry.displayName || entry.username}
-                  {entry.id === player1.id && <span style={{ color: "#4caf50", marginLeft: 6, fontSize: 10 }}>TÚ</span>}
+                  {entry.id === player1.id && (
+                    <span style={{ color: "#4caf50", marginLeft: 6, fontSize: 10 }}>TÚ</span>
+                  )}
                 </span>
                 <span style={{ fontSize: 11, color: "#555" }}>{entry.country || "—"}</span>
                 <span style={{ fontSize: 13, color: "#4ecdc4", fontWeight: "bold", textAlign: "right" }}>
                   {entry.wins}
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  if (showHistory) {
+    const resultColor = (r: GameHistoryEntry["result"]) =>
+      r === "win" ? "#4caf50" : r === "loss" ? "#e53935" : "#888";
+    const resultLabel = (r: GameHistoryEntry["result"]) =>
+      r === "win" ? "VICTORIA" : r === "loss" ? "DERROTA" : "EMPATE";
+
+    return (
+      <div style={{
+        flex: "1 1 auto", background: "#1a1a1a", border: "1px solid #2a2a2a",
+        borderRadius: 8, padding: 32, display: "flex", flexDirection: "column", gap: 16,
+      }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <p style={{ margin: 0, fontSize: 13, color: "#aaa", letterSpacing: 2 }}>HISTORIAL</p>
+          <button style={{ ...s.btnSmall, color: "#555" }} onClick={() => setShowHistory(false)}>
+            ← Volver
+          </button>
+        </div>
+
+        {loadingHistory ? (
+          <p style={{ color: "#444", fontSize: 12, textAlign: "center", marginTop: 40 }}>Cargando...</p>
+        ) : history.length === 0 ? (
+          <p style={{ color: "#444", fontSize: 12, textAlign: "center", marginTop: 40 }}>Sin partidas aún.</p>
+        ) : (
+          <div style={{ display: "flex", flexDirection: "column", gap: 8, overflowY: "auto" }}>
+            <div style={{
+              display: "grid", gridTemplateColumns: "1fr 80px 80px 80px auto",
+              gap: 12, padding: "6px 12px", borderBottom: "1px solid #2a2a2a",
+            }}>
+              <span style={{ fontSize: 10, color: "#444", letterSpacing: 2 }}>RIVAL</span>
+              <span style={{ fontSize: 10, color: "#444", letterSpacing: 2 }}>MARCA</span>
+              <span style={{ fontSize: 10, color: "#444", letterSpacing: 2 }}>SCORE</span>
+              <span style={{ fontSize: 10, color: "#444", letterSpacing: 2 }}>FECHA</span>
+              <span style={{ fontSize: 10, color: "#444", letterSpacing: 2 }}>RESULTADO</span>
+            </div>
+
+            {history.map((entry) => (
+              <div key={entry.id} style={{
+                display: "grid", gridTemplateColumns: "1fr 80px 80px 80px auto",
+                gap: 12, padding: "10px 12px",
+                background: "#111",
+                border: "1px solid #222",
+                borderRadius: 4,
+              }}>
+                <span style={{ fontSize: 12, color: "#aaa", letterSpacing: 1 }}>
+                  {entry.opponentName}
+                  {entry.isVsAI && <span style={{ color: "#555", marginLeft: 4 }}>(IA)</span>}
+                </span>
+                <span style={{ fontSize: 12, color: "#555", fontWeight: "bold" }}>
+                  {entry.playerMark}
+                </span>
+                <span style={{ fontSize: 12, color: "#666", fontFamily: "monospace" }}>
+                  {entry.score1}-{entry.score2}
+                </span>
+                <span style={{ fontSize: 11, color: "#555" }}>
+                  {new Date(entry.finishedAt ?? entry.playedAt).toLocaleDateString("es-ES", {
+                    day: "2-digit", month: "2-digit", year: "2-digit",
+                  })}
+                </span>
+                <span style={{
+                  fontSize: 12, fontWeight: "bold", textAlign: "right",
+                  color: resultColor(entry.result),
+                }}>
+                  {resultLabel(entry.result)}
                 </span>
               </div>
             ))}
@@ -162,7 +278,6 @@ export default function GameCenter({
             Elige un amigo de la lista para jugar
           </p>
 
-          {/* Botones inferiores */}
           <div style={{
             position: "absolute", bottom: 24, left: 24,
             display: "flex", gap: 8,
@@ -175,6 +290,7 @@ export default function GameCenter({
             </button>
             <button
               style={{ ...s.btnSmall, fontSize: 11, letterSpacing: 1, padding: "6px 12px" }}
+              onClick={openHistory}
             >
               📋 HISTORIAL
             </button>

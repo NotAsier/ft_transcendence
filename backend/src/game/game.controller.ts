@@ -1,5 +1,6 @@
-import { Controller, Post, Get, Param, Body, ParseIntPipe } from '@nestjs/common';
+import { Controller, Post, Get, Param, Body, ParseIntPipe, UseGuards, Request } from '@nestjs/common';
 import { GameService } from './game.service';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 
 @Controller('game')
 export class GameController {
@@ -16,6 +17,13 @@ export class GameController {
     @Body('player2Id') player2Id: number,
   ) {
     return this.gameService.joinGame(gameId, player2Id);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('history/me')
+  getHistory(@Request() req: any) {
+    console.log('=== [controller] req.user:', req.user);
+    return this.gameService.getHistory(req.user.userId);
   }
 
   @Get(':id')
