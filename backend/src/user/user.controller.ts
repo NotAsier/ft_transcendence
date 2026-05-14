@@ -1,12 +1,18 @@
 import {
   Controller, Get, Post, Delete,
   UseGuards, Request, Param, ParseIntPipe,
+  Body, Patch, UploadedFile, UseInterceptors,
 } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { UserService } from './user.service';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { diskStorage } from 'multer';
+import { extname } from 'path';
+
 
 @Controller('user')
 @UseGuards(JwtAuthGuard)
+
 export class UserController {
   constructor(private userService: UserService) {}
 
@@ -14,6 +20,31 @@ export class UserController {
   getMe(@Request() req) {
     return this.userService.getMe(req.user.userId);
   }
+
+  @Patch('me')
+  updateMe(@Request() req, @Body() body: any) {
+  return this.userService.updateMe(req.user.userId, body);
+  }
+
+  @Post('avatar')
+  @UseInterceptors(
+    FileInterceptor('file', {
+      storage: diskStorage({
+        destination: './uploads/avatars',
+        filename: (req, file, cb) => {
+          const unique =
+            Date.now() + '-' + Math.round(Math.random() * 1e9);
+          cb(null, unique + extname(file.originalname));
+        },
+      }),
+    }),
+  )
+  uploadAvatar(@Request() req, @UploadedFile() file: Express.Multer.File) {
+    return this.userService.updateMe(req.user.userId, {
+      avatarUrl: `/uploads/avatars/${file.filename}`,
+    });
+  }
+
 
   @Get()
   getAll() {

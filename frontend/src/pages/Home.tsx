@@ -170,7 +170,7 @@ export default function Home() {
       const p1: Player = {
         id: me.id, username: me.username, token: data.access_token,
         email: me.email, displayName: me.displayName, country: me.country,
-        gender: me.gender, birthDate: me.birthDate, wins: me.wins,
+        gender: me.gender, birthDate: me.birthDate, wins: me.wins, avatarUrl: me.avatarUrl,
       };
       setPlayer1(p1);
       await initSocial(data.access_token, me.id);
@@ -241,6 +241,42 @@ export default function Home() {
     setPlayer1(null);
   };
 
+  const updateProfile = async (data: any) => {
+    if (!player1) return;
+  
+    const res = await fetch("/api/user/me", {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${player1.token}`,
+      },
+      body: JSON.stringify(data),
+    });
+  
+    const updated = await res.json();
+  
+    setPlayer1((prev) => prev ? { ...prev, ...updated } : prev);
+  };
+
+  const uploadAvatar = async (file: File) => {
+    if (!player1) return;
+  
+    const formData = new FormData();
+    formData.append("file", file);
+  
+    const res = await fetch("/api/user/avatar", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${player1.token}`,
+      },
+      body: formData,
+    });
+  
+    const updated = await res.json();
+  
+    setPlayer1((prev) => prev ? { ...prev, ...updated } : prev);
+  };
+
   // ── LOBBY VIEW ────────────────────────────────────────────────────────────────
   if (view === "lobby" && player1) {
     return (
@@ -258,6 +294,8 @@ export default function Home() {
             selectedProfile={selectedProfile}
             onClearProfile={() => setSelectedProfile(null)}
             onLogout={handleLogout}
+            onUpdateProfile={updateProfile}
+            onUploadAvatar={uploadAvatar}
           />
 
           <GameCenter

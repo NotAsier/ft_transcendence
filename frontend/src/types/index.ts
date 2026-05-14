@@ -13,6 +13,7 @@ export interface UserProfile {
   gender?: string;
   birthDate?: string;
   wins?: number;
+  avatarUrl?: string;
 }
 
 export interface Player {
@@ -25,6 +26,7 @@ export interface Player {
   gender?: string;
   birthDate?: string;
   wins?: number;
+  avatarUrl?: string;
 }
 
 export interface FriendRequest {

@@ -5,23 +5,43 @@ import { PrismaService } from '../prisma/prisma.service';
 export class UserService {
   constructor(private prisma: PrismaService) {}
 
-  async getMe(userId: number) {
-    return this.prisma.user.findUnique({
-      where: { id: userId },
-      select: {
-        id: true,
-        email: true,
-        username: true,
-        displayName: true,
-        avatarUrl: true,
-        country: true,
-        gender: true,
-        birthDate: true,
-        wins: true,
-        createdAt: true,
-      },
-    });
-  }
+
+async getMe(userId: number) {
+  return this.prisma.user.findUnique({
+    where: { id: userId },
+    select: {
+      id: true,
+      email: true,
+      username: true,
+      displayName: true,
+      country: true,
+      gender: true,
+      birthDate: true,
+      wins: true,
+      avatarUrl: true,
+      createdAt: true,
+    },
+  });
+}
+
+async updateMe(userId: number, data: any) {
+  const allowed = {
+    displayName: data.displayName,
+    country: data.country,
+    gender: data.gender,
+    birthDate: data.birthDate ? new Date(data.birthDate) : undefined,
+    avatarUrl: data.avatarUrl,
+  };
+
+  Object.keys(allowed).forEach(
+    (k) => allowed[k] === undefined && delete allowed[k],
+  );
+
+  return this.prisma.user.update({
+    where: { id: userId },
+    data: allowed,
+  });
+}
 
   async getAll() {
     return this.prisma.user.findMany({
@@ -132,6 +152,5 @@ export class UserService {
       take: 10,
     });
   }
-
 
 }
