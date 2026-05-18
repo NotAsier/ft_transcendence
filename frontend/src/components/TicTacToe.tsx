@@ -3,6 +3,8 @@ import { Socket } from "socket.io-client";
 
 const API = "/api";
 
+type Difficulty = "easy" | "medium" | "hard";
+
 interface Player   { id: number; username: string; token: string; }
 interface Opponent { id: number; username: string; }
 
@@ -14,8 +16,10 @@ interface Props {
     roomId?:        string;
     gameId?:        number;
     myId?:          number;
-    gamePlayer1Id?: number; // ID del jugador X según el servidor (el que invitó)
+    gamePlayer1Id?: number;
     socket?:        Socket | null;
+    isAIGame?:      boolean;
+    aiDifficulty?:  Difficulty | null;
 }
 
 export default function TicTacToe({
@@ -28,58 +32,77 @@ export default function TicTacToe({
     myId,
     gamePlayer1Id,
     socket,
+    isAIGame = false,
+    aiDifficulty = null,
 }: Props) {
-    const [gameId,  setGameId]  = useState<number | null>(initialGameId ?? null);
-    const [board,   setBoard]   = useState("_________");
-    const [status,  setStatus]  = useState(isOnline ? "playing" : "idle");
-    const [winner,  setWinner]  = useState<string | null>(null);
-    const [loading, setLoading] = useState(false);
-    const [error,   setError]   = useState<string | null>(null);
+    const [gameId,     setGameId]     = useState<number | null>(initialGameId ?? null);
+    const [board,      setBoard]      = useState("_________");
+    const [status,     setStatus]     = useState(isOnline ? "playing" : "idle");
+    const [winner,     setWinner]     = useState<string | null>(null);
+    const [loading,    setLoading]    = useState(false);
+    const [error,      setError]      = useState<string | null>(null);
+    const [aiThinking, setAiThinking] = useState(false);
 
     const cells    = board.split("");
     const xCount   = cells.filter(c => c === "X").length;
     const oCount   = cells.filter(c => c === "O").length;
     const isP1Turn = xCount === oCount;
 
-    // ── Quién es X y quién es O ────────────────────────────────────────────────
-    // gamePlayer1Id es el ID del jugador X según el servidor (el que invitó).
-    // En modo local, player1 siempre es X.
-    // En modo online, X es quien tenga id === gamePlayer1Id.
     const xId = isOnline ? (gamePlayer1Id ?? player1.id) : player1.id;
     const oId = isOnline
         ? (gamePlayer1Id === player1.id ? player2.id : player1.id)
         : player2.id;
 
-    // Nombre de cada símbolo (siempre correcto en ambos clientes)
     const xName = player1.id === xId ? player1.username : player2.username;
     const oName = player1.id === oId ? player1.username : player2.username;
 
-    // ¿Soy yo X u O?
     const iAmX = isOnline && myId === xId;
     const iAmO = isOnline && myId === oId;
 
-    // ¿Es mi turno?
     const isMyTurn = isOnline
         ? (isP1Turn ? iAmX : iAmO)
         : true;
 
-    // ── Listeners online ───────────────────────────────────────────────────────
+    // ── IA: mueve automáticamente cuando es turno de O ──────────────────────
+    useEffect(() => {
+        if (!isAIGame || !gameId || status !== "playing" || loading || aiThinking) return;
+        // Es turno de la IA cuando toca O (player2)
+        if (isP1Turn) return; // turno del jugador humano
+
+        const doAiMove = async () => {
+            setAiThinking(true);
+            // Pequeño delay para que parezca que "piensa"
+            await new Promise(r => setTimeout(r, 500));
+            try {
+                const res = await fetch(`${API}/game/${gameId}/ai-move`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json", Authorization: `Bearer ${player1.token}` },
+                    body: JSON.stringify({ difficulty: aiDifficulty ?? "medium" }),
+                });
+                const data = await res.json();
+                if (data.statusCode) throw new Error(data.message);
+                setBoard(data.board);
+                setStatus(data.status);
+                setWinner(data.winner);
+            } catch (e: any) {
+                setError(e.message);
+            }
+            setAiThinking(false);
+        };
+
+        doAiMove();
+    }, [isAIGame, gameId, status, isP1Turn, loading, aiThinking]);
+
+    // ── Listeners online ─────────────────────────────────────────────────────
     useEffect(() => {
         if (!isOnline || !socket) return;
 
         const onGameUpdated = (data: { board: string; status: string; winner: string | null }) => {
-            setBoard(data.board);
-            setStatus(data.status);
-            setWinner(data.winner);
-            setError(null);
+            setBoard(data.board); setStatus(data.status); setWinner(data.winner); setError(null);
         };
-
         const onGameOver = (data: { winner: string | null; board: string }) => {
-            setBoard(data.board);
-            setWinner(data.winner);
-            setStatus("finished");
+            setBoard(data.board); setWinner(data.winner); setStatus("finished");
         };
-
         const onMoveError = ({ message }: { message: string }) => setError(message);
 
         socket.on("game_updated", onGameUpdated);
@@ -93,10 +116,10 @@ export default function TicTacToe({
         };
     }, [isOnline, socket]);
 
-    // ── Crear partida local ────────────────────────────────────────────────────
+    // ── Crear partida local / vs IA ──────────────────────────────────────────
     const newGame = async () => {
         if (isOnline) return;
-        setLoading(true); setError(null);
+        setLoading(true); setError(null); setAiThinking(false);
         try {
             const r1 = await fetch(`${API}/game`, {
                 method: "POST",
@@ -119,9 +142,10 @@ export default function TicTacToe({
         setLoading(false);
     };
 
-    // ── Mover ──────────────────────────────────────────────────────────────────
+    // ── Mover ────────────────────────────────────────────────────────────────
     const move = async (pos: number) => {
         if (status !== "playing" || cells[pos] !== "_") return;
+        if (isAIGame && !isP1Turn) return; // bloquear si es turno de la IA
         if (isOnline && (!isMyTurn || !socket || !roomId || !gameId)) return;
         setError(null);
 
@@ -145,27 +169,40 @@ export default function TicTacToe({
         }
     };
 
-    // ── Labels ─────────────────────────────────────────────────────────────────
+    // ── Labels ───────────────────────────────────────────────────────────────
     const winnerLabel =
         winner === "player1" ? `¡Gana ${xName} (X)!` :
-        winner === "player2" ? `¡Gana ${oName} (O)!` :
+        winner === "player2" ? `¡Gana ${isAIGame ? "la IA" : oName} (O)!` :
         winner === "draw"    ? "¡Empate!" : null;
 
-    const turnLabel = isOnline
-        ? (isMyTurn
-            ? "Tu turno"
-            : `Turno de ${isP1Turn ? xName : oName}...`)
-        : (isP1Turn
-            ? `Turno: ${player1.username} (X)`
-            : `Turno: ${player2.username} (O)`);
+    const turnLabel = isAIGame
+        ? (isP1Turn ? `Tu turno (X)` : "La IA está pensando...")
+        : isOnline
+            ? (isMyTurn ? "Tu turno" : `Turno de ${isP1Turn ? xName : oName}...`)
+            : (isP1Turn
+                ? `Turno: ${player1.username} (X)`
+                : `Turno: ${player2.username} (O)`);
 
-    // ── Render ─────────────────────────────────────────────────────────────────
+    const difficultyLabel: Record<Difficulty, string> = {
+        easy: "FÁCIL 🟢", medium: "MEDIO 🟡", hard: "DIFÍCIL 🔴",
+    };
+
+    // ── Render ───────────────────────────────────────────────────────────────
     return (
         <div style={{
             display: "flex", flexDirection: "column", alignItems: "center",
             padding: "16px", gap: "12px", fontFamily: "monospace", color: "#fff", width: "100%",
         }}>
-            <h2 style={{ letterSpacing: "4px", fontSize: "18px" }}>TIC TAC TOE</h2>
+            <h2 style={{ letterSpacing: "4px", fontSize: "18px", margin: 0 }}>TIC TAC TOE</h2>
+
+            {isAIGame && aiDifficulty && (
+                <span style={{
+                    fontSize: 10, letterSpacing: 2, color: "#aaa",
+                    background: "#111", padding: "2px 10px", borderRadius: 99,
+                }}>
+                    vs IA · {difficultyLabel[aiDifficulty]}
+                </span>
+            )}
 
             {isOnline && (
                 <span style={{
@@ -179,11 +216,12 @@ export default function TicTacToe({
                 </span>
             )}
 
-            {/* Cabecera: diseño original */}
             <div style={{ display: "flex", gap: "24px", fontSize: "13px" }}>
                 <span style={{ color: "#ff6b35" }}>X — {xName}{iAmX ? " (tú)" : ""}</span>
                 <span style={{ color: "#555" }}>VS</span>
-                <span style={{ color: "#4ecdc4" }}>O — {oName}{iAmO ? " (tú)" : ""}</span>
+                <span style={{ color: "#4ecdc4" }}>
+                    O — {isAIGame ? "IA" : oName}{iAmO ? " (tú)" : ""}
+                </span>
             </div>
 
             {error && <p style={{ color: "#ff6666", fontSize: "12px", margin: 0 }}>{error}</p>}
@@ -203,7 +241,9 @@ export default function TicTacToe({
                     <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 90px)", gap: "6px" }}>
                         {cells.map((cell, i) => {
                             const canClick =
-                                cell === "_" && status === "playing" && !loading && (!isOnline || isMyTurn);
+                                cell === "_" && status === "playing" && !loading && !aiThinking &&
+                                (!isOnline || isMyTurn) &&
+                                (!isAIGame || isP1Turn);
                             return (
                                 <button
                                     key={i}
@@ -213,9 +253,7 @@ export default function TicTacToe({
                                         height: "90px", fontSize: "32px", fontWeight: "bold",
                                         background: "#1a1a1a", border: "1px solid #2a2a2a",
                                         borderRadius: "2px", cursor: canClick ? "pointer" : "default",
-                                        color:
-                                            cell === "X" ? "#ff6b35" :
-                                            cell === "O" ? "#4ecdc4" : "#333",
+                                        color: cell === "X" ? "#ff6b35" : cell === "O" ? "#4ecdc4" : "#333",
                                         fontFamily: "monospace",
                                     }}
                                 >
@@ -227,7 +265,7 @@ export default function TicTacToe({
 
                     <div style={{ display: "flex", gap: "8px" }}>
                         {!isOnline && (
-                            <button onClick={newGame} disabled={loading} style={btnStyle}>
+                            <button onClick={newGame} disabled={loading || aiThinking} style={btnStyle}>
                                 {loading ? "..." : "Nueva Partida"}
                             </button>
                         )}

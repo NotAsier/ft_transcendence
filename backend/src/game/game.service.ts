@@ -84,16 +84,30 @@ export class GameService {
         });
 
         if (hasWinner) {
-            const winnerId = isP1Turn
-                ? (updatedGame.player1Id ?? undefined)
-                : (updatedGame.player2Id ?? undefined);
+          const winnerId = isP1Turn
+            ? (updatedGame.player1Id ?? undefined)
+            : (updatedGame.player2Id ?? undefined);
 
-            if (winnerId) {
-                await this.prisma.user.update({
-                    where: { id: winnerId },
-                    data:  { wins: { increment: 1 } },
-                });
+          if (winnerId) {
+          // Comprobar si es partida vs IA (el oponente es Guest)
+            const player1User = await this.prisma.user.findUnique({
+              where: { id: updatedGame.player1Id! },
+              select: { username: true },
+            });
+            const player2User = updatedGame.player2Id ? await this.prisma.user.findUnique({
+              where: { id: updatedGame.player2Id },
+              select: { username: true },
+            }) : null;
+
+            const isVsAI = player1User?.username === 'Guest' || player2User?.username === 'Guest';
+
+            if (!isVsAI) {
+              await this.prisma.user.update({
+                where: { id: winnerId },
+                data:  { wins: { increment: 1 } },
+              });
             }
+          }
         }
 
         return updatedGame;
@@ -169,4 +183,87 @@ export class GameService {
         console.log(`| ${b[6]} | ${b[7]} | ${b[8]} |`);
         console.log('+---+---+---+\n');
     }
+
+    async aiMove(gameId: number, difficulty: 'easy' | 'medium' | 'hard') {
+    const game = await this.prisma.match.findUnique({ where: { id: gameId } });
+
+    if (!game)                     throw new NotFoundException('Partida no encontrada');
+    if (game.status !== 'playing') throw new BadRequestException('La partida no está en curso');
+
+    const board = game.board.split('');
+    let position: number;
+
+    if (difficulty === 'easy') {
+      position = this.randomMove(board);
+    } else if (difficulty === 'medium') {
+    // 30% de hacer movimiento aleatorio
+      position = Math.random() < 0.3
+        ? this.randomMove(board)
+        : this.bestMove(board, 'O');
+    } else {
+      position = this.bestMove(board, 'O');
+    }
+
+    return this.makeMove(gameId, game.player2Id!, position);
+  }
+
+  private randomMove(board: string[]): number {
+    const empty = board.map((c, i) => c === '_' ? i : -1).filter(i => i !== -1);
+    return empty[Math.floor(Math.random() * empty.length)];
+  }
+
+  private bestMove(board: string[], aiMark: 'X' | 'O'): number {
+    const humanMark = aiMark === 'O' ? 'X' : 'O';
+    let bestScore = -Infinity;
+    let bestPos   = -1;
+
+    board.forEach((cell, i) => {
+      if (cell !== '_') return;
+      board[i] = aiMark;
+      const score = this.minimax(board, 0, false, aiMark, humanMark);
+      board[i] = '_';
+      if (score > bestScore) { bestScore = score; bestPos = i; }
+    });
+
+    return bestPos;
+  }
+
+  private minimax(
+    board: string[], depth: number, isMaximizing: boolean,
+    aiMark: string, humanMark: string,
+  ): number {
+    const boardStr = board.join('');
+    if (this.checkWinnerForMark(boardStr, aiMark))   return 10 - depth;
+    if (this.checkWinnerForMark(boardStr, humanMark)) return depth - 10;
+    if (!boardStr.includes('_'))                      return 0;
+
+    if (isMaximizing) {
+      let best = -Infinity;
+      board.forEach((cell, i) => {
+        if (cell !== '_') return;
+        board[i] = aiMark;
+        best = Math.max(best, this.minimax(board, depth + 1, false, aiMark, humanMark));
+        board[i] = '_';
+      });
+      return best;
+    } else {
+      let best = Infinity;
+      board.forEach((cell, i) => {
+        if (cell !== '_') return;
+        board[i] = humanMark;
+        best = Math.min(best, this.minimax(board, depth + 1, true, aiMark, humanMark));
+        board[i] = '_';
+      });
+      return best;
+    }
+  }
+
+  private checkWinnerForMark(board: string, mark: string): boolean {
+    const lines = [
+      [0,1,2],[3,4,5],[6,7,8],
+      [0,3,6],[1,4,7],[2,5,8],
+      [0,4,8],[2,4,6],
+    ];
+    return lines.some(([a,b,c]) => board[a] === mark && board[b] === mark && board[c] === mark);
+  }
 }

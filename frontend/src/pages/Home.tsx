@@ -29,6 +29,8 @@ export default function Home() {
 
   // Online game state
   const [isOnlineGame, setIsOnlineGame]       = useState(false);
+  const [isAIGame, setIsAIGame]               = useState(false);
+  const [aiDifficulty, setAiDifficulty]       = useState<"easy" | "medium" | "hard" | null>(null);
   const [onlineGameId, setOnlineGameId]       = useState<number | null>(null);
   const [onlineRoomId, setOnlineRoomId]       = useState<string | null>(null);
   const [onlinePlayer1Id, setOnlinePlayer1Id] = useState<number | null>(null);
@@ -187,9 +189,23 @@ export default function Home() {
     if (guest?.id) setPlayer2(guest);
   };
 
+  const startAIGame = async (difficulty: "easy" | "medium" | "hard") => {
+    const res = await fetch(`/api/user/guest`, {
+      headers: { Authorization: `Bearer ${player1!.token}` },
+    });
+    const guest = await res.json();
+    if (guest?.id) {
+      setIsAIGame(true);
+      setAiDifficulty(difficulty);
+      setPlayer2(guest);
+    }
+  };
+
   const handleExitGame = () => {
     setPlayer2(null);
     setIsOnlineGame(false);
+    setIsAIGame(false);
+    setAiDifficulty(null);
     setOnlineGameId(null);
     setOnlineRoomId(null);
     setOnlinePlayer1Id(null);
@@ -310,6 +326,9 @@ export default function Home() {
             onStartLocal={startLocalGame}
             onOpenMultiModal={() => setShowMultiModal(true)}
             onExitGame={handleExitGame}
+            onStartAI={startAIGame}
+            isAIGame={isAIGame}
+            aiDifficulty={aiDifficulty}
           />
 
           {/* Right column */}

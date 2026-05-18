@@ -39,4 +39,11 @@ export class GameController {
   ) {
     return this.gameService.makeMove(id, playerId, position);
   }
+  @Post(':id/ai-move')
+  aiMove(
+    @Param('id', ParseIntPipe) id: number,
+    @Body('difficulty') difficulty: 'easy' | 'medium' | 'hard',
+  ) {
+    return this.gameService.aiMove(id, difficulty);
+  }
 }
