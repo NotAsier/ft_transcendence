@@ -39,11 +39,20 @@ export class GameController {
   ) {
     return this.gameService.makeMove(id, playerId, position);
   }
+
   @Post(':id/ai-move')
   aiMove(
     @Param('id', ParseIntPipe) id: number,
     @Body('difficulty') difficulty: 'easy' | 'medium' | 'hard',
   ) {
     return this.gameService.aiMove(id, difficulty);
+  }
+
+  // Endpoint para partidas pendientes: retorna la partida "playing" no terminada entre user y el oponente (si existe y en timeout)
+  @UseGuards(JwtAuthGuard)
+  @Get('pending/:opponentId')
+  async getPendingGame(@Request() req: any, @Param('opponentId', ParseIntPipe) opponentId: number) {
+    const userId = req.user.userId;
+    return this.gameService.getPendingGame(userId, opponentId);
   }
 }

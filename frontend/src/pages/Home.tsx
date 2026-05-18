@@ -19,6 +19,9 @@ const API = "/api";
 const authHeader = (token: string) => ({ Authorization: `Bearer ${token}` });
 
 export default function Home() {
+  // Partidas multijugador pendientes por userId
+  const [pendingGamesByUser, setPendingGamesByUser] = useState<Record<number, import('../types').PendingGame | null>>({});
+
   const [view, setView]       = useState<View>("home");
   const [player1, setPlayer1] = useState<Player | null>(null);
   const [player2, setPlayer2] = useState<User | null>(null);
@@ -51,6 +54,30 @@ export default function Home() {
     users, friends, requests, friendStatus,
     initSocial, sendRequest, acceptRequest, removeFriend, loadProfile,
   } = useSocial(player1);
+
+  // Cargar partidas pendientes vs amigos y usuarios tras login
+  useEffect(() => {
+    async function fetchPendingGames() {
+      if (!player1) return;
+      const result: Record<number, import('../types').PendingGame | null> = {};
+      const allUsers = [...friends];
+      await Promise.all(allUsers.map(async (f) => {
+        try {
+          const res = await fetch(`/api/game/pending/${f.id}`, { headers: authHeader(player1.token) });
+          if (res.ok) {
+            const data = await res.json();
+            if (data && data.status === 'playing') {
+              result[f.id] = data;
+              return;
+            }
+          }
+        } catch {}
+        result[f.id] = null;
+      }));
+      setPendingGamesByUser(result);
+    }
+    fetchPendingGames();
+  }, [player1, friends]);
 
   // ── Google OAuth redirect ─────────────────────────────────────────────
   useEffect(() => {
@@ -211,6 +238,26 @@ export default function Home() {
     setOnlinePlayer1Id(null);
   };
 
+  const handleReconnectGame = (pending: import('../types').PendingGame) => {
+    if (!player1) return;
+    const opponentId = pending.player1Id === player1.id ? pending.player2Id : pending.player1Id;
+    console.log('[Reconnect] gameId:', pending.gameId, 'opponentId:', opponentId, 'player1Id:', player1.id);
+    const opponent =
+      users.find(u => u.id === opponentId) ??
+      friends.find(f => f.id === opponentId) ??
+      { id: opponentId, username: "Rival" };
+    setPlayer2(opponent);
+    setOnlineGameId(pending.gameId);
+    setOnlinePlayer1Id(pending.player1Id);
+    setOnlineRoomId(pending.roomId);
+    setIsOnlineGame(true);
+  };
+
+  const handleGameEnd = (gameId: number, opponentId: number) => {
+    // Limpiar partida pendiente cuando termina
+    setPendingGamesByUser(prev => ({ ...prev, [opponentId]: null }));
+  };
+
   // ── Invitation actions ────────────────────────────────────────────────────────
   const sendInvitation = (toUser: User) => {
     if (!socketRef.current || !player1) return;
@@ -329,6 +376,7 @@ export default function Home() {
             onStartAI={startAIGame}
             isAIGame={isAIGame}
             aiDifficulty={aiDifficulty}
+            onGameEnd={handleGameEnd}
           />
 
           {/* Right column */}
@@ -336,19 +384,23 @@ export default function Home() {
             <PlayerList
               users={users}
               friendStatus={friendStatus}
+              pendingGames={pendingGamesByUser}
               onSendRequest={sendRequest}
               onAcceptRequest={acceptRequest}
               onRemoveFriend={removeFriend}
               onStartGame={setPlayer2}
+              onReconnectGame={handleReconnectGame}
               onLoadProfile={handleLoadProfile}
             />
             <FriendsPanel
               friends={friends}
               requests={requests}
               onlineFriends={onlineFriends}
+              pendingGames={pendingGamesByUser}
               onAcceptRequest={acceptRequest}
               onRemoveFriend={removeFriend}
               onStartGame={setPlayer2}
+              onReconnectGame={handleReconnectGame}
               onOpenChat={setChatWith}
               onLoadProfile={handleLoadProfile}
             />

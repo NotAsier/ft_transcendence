@@ -35,3 +35,12 @@ export interface FriendRequest {
 }
 
 export type FriendStatus = "none" | "pending_sent" | "pending_received" | "friends";
+
+// Para partidas multijugador pendientes de reconexión
+export interface PendingGame {
+  gameId: number;
+  roomId: string;
+  player1Id: number;
+  player2Id: number;
+  status: string;
+}

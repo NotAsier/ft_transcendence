@@ -1,13 +1,15 @@
-import type { User, FriendRequest } from "../types";
+import type { User, FriendRequest, PendingGame } from "../types";
 import { s } from "../styles";
 
 interface FriendsPanelProps {
   friends: User[];
   requests: FriendRequest[];
   onlineFriends: number[];
+  pendingGames: Record<number, PendingGame | null>;
   onAcceptRequest: (fromUserId: number) => void;
   onRemoveFriend: (userId: number) => void;
   onStartGame: (user: User) => void;
+  onReconnectGame: (pending: PendingGame) => void;
   onOpenChat: (user: User) => void;
   onLoadProfile: (userId: number) => void;
 }
@@ -16,9 +18,11 @@ export default function FriendsPanel({
   friends,
   requests,
   onlineFriends,
+  pendingGames,
   onAcceptRequest,
   onRemoveFriend,
   onStartGame,
+  onReconnectGame,
   onOpenChat,
   onLoadProfile,
 }: FriendsPanelProps) {
@@ -82,7 +86,13 @@ export default function FriendsPanel({
                 ♥ {f.username}
               </span>
               <div style={{ display: "flex", gap: 4 }}>
-                <button style={s.btnSmall} onClick={() => onStartGame(f)} title="Jugar">▶</button>
+                {pendingGames[f.id] && (
+                  <button
+                    style={{ ...s.btnSmall, color: "#4caf50", borderColor: "#2a4a2a", fontWeight: 'bold' }}
+                    onClick={() => onReconnectGame(pendingGames[f.id]!)}
+                    title="Reconectar a partida pendiente"
+                  >↻ EN PARTIDA</button>
+                )}
                 <button
                   style={{ ...s.btnSmall, color: "#4ecdc4", borderColor: "#2a4a4a" }}
                   onClick={() => onOpenChat(f)} title="Chat"

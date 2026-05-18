@@ -266,4 +266,31 @@ export class GameService {
     ];
     return lines.some(([a,b,c]) => board[a] === mark && board[b] === mark && board[c] === mark);
   }
+
+    // Retorna partida 'playing' con opponent si existe y en ventana de reconexión (5min)
+    async getPendingGame(userId: number, opponentId: number) {
+        const FIVE_MINUTES = 5 * 60 * 1000;
+        const now = new Date();
+        const match = await this.prisma.match.findFirst({
+            where: {
+                status: 'playing',
+                OR: [
+                    { player1Id: userId, player2Id: opponentId },
+                    { player1Id: opponentId, player2Id: userId },
+                ],
+            },
+            orderBy: { playedAt: 'desc' },
+        });
+        if (!match) return null;
+        const playedAt = match.playedAt || match.updatedAt || match.createdAt || now;
+        if (now.getTime() - new Date(playedAt).getTime() > FIVE_MINUTES) return null;
+        return {
+            gameId: match.id,
+            roomId: `game_${match.id}`,
+            player1Id: match.player1Id,
+            player2Id: match.player2Id,
+            status: match.status,
+        };
+    }
 }
+

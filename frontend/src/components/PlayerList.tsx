@@ -1,23 +1,27 @@
-import type { User, FriendStatus } from "../types";
+import type { User, FriendStatus, PendingGame } from "../types";
 import { s } from "../styles";
 
 interface PlayerListProps {
   users: User[];
   friendStatus: Record<number, FriendStatus>;
+  pendingGames: Record<number, PendingGame | null>;
   onSendRequest: (userId: number) => void;
   onAcceptRequest: (userId: number) => void;
   onRemoveFriend: (userId: number) => void;
   onStartGame: (user: User) => void;
+  onReconnectGame: (pending: PendingGame) => void;
   onLoadProfile: (userId: number) => void;
 }
 
 export default function PlayerList({
   users,
   friendStatus,
+  pendingGames,
   onSendRequest,
   onAcceptRequest,
   onRemoveFriend,
   onStartGame,
+  onReconnectGame,
   onLoadProfile,
 }: PlayerListProps) {
   return (
@@ -68,12 +72,13 @@ export default function PlayerList({
                       >✕</button>
                     </>
                   )}
-                  {status === "friends" && (
-                    <button
-                      style={{ ...s.btnSmall, color: "#555", borderColor: "#333" }}
-                      onClick={() => onStartGame(u)} title="Jugar"
-                    >▶</button>
-                  )}
+                  {status === "friends" && pendingGames[u.id] && (
+                      <button
+                        style={{ ...s.btnSmall, color: "#4caf50", borderColor: "#2a4a2a", fontWeight: 'bold' }}
+                        onClick={() => onReconnectGame(pendingGames[u.id]!)}
+                        title="Reconectar a partida pendiente"
+                      >↻ EN PARTIDA</button>
+                    )}
                 </div>
               </div>
             );

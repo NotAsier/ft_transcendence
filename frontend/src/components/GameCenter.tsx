@@ -47,6 +47,7 @@ interface GameCenterProps {
   onStartAI: (difficulty: Difficulty) => void;
   isAIGame: boolean;
   aiDifficulty: Difficulty | null;
+  onGameEnd: (gameId: number, opponentId: number) => void;
 }
 
 export default function GameCenter({
@@ -64,6 +65,7 @@ export default function GameCenter({
   onStartAI,
   isAIGame,
   aiDifficulty,
+  onGameEnd,
 }: GameCenterProps) {
   const [showLeaderboard, setShowLeaderboard] = useState(false);
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
@@ -263,6 +265,7 @@ export default function GameCenter({
           player1={player1}
           player2={player2}
           onExit={onExitGame}
+          onGameEnd={onGameEnd}
           isOnline={isOnlineGame}
           roomId={onlineRoomId ?? undefined}
           gameId={onlineGameId ?? undefined}

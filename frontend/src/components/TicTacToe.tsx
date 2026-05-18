@@ -12,6 +12,7 @@ interface Props {
     player1:        Player;
     player2:        Opponent;
     onExit:         () => void;
+    onGameEnd?:     (gameId: number, opponentId: number) => void;
     isOnline?:      boolean;
     roomId?:        string;
     gameId?:        number;
@@ -26,6 +27,7 @@ export default function TicTacToe({
     player1,
     player2,
     onExit,
+    onGameEnd,
     isOnline = false,
     roomId,
     gameId: initialGameId,
@@ -66,12 +68,10 @@ export default function TicTacToe({
     // ── IA: mueve automáticamente cuando es turno de O ──────────────────────
     useEffect(() => {
         if (!isAIGame || !gameId || status !== "playing" || loading || aiThinking) return;
-        // Es turno de la IA cuando toca O (player2)
-        if (isP1Turn) return; // turno del jugador humano
+        if (isP1Turn) return;
 
         const doAiMove = async () => {
             setAiThinking(true);
-            // Pequeño delay para que parezca que "piensa"
             await new Promise(r => setTimeout(r, 500));
             try {
                 const res = await fetch(`${API}/game/${gameId}/ai-move`, {
@@ -102,6 +102,9 @@ export default function TicTacToe({
         };
         const onGameOver = (data: { winner: string | null; board: string }) => {
             setBoard(data.board); setWinner(data.winner); setStatus("finished");
+            if (onGameEnd && initialGameId) {
+                onGameEnd(initialGameId, player2.id);
+            }
         };
         const onMoveError = ({ message }: { message: string }) => setError(message);
 
@@ -116,7 +119,27 @@ export default function TicTacToe({
         };
     }, [isOnline, socket]);
 
-    // ── Crear partida local / vs IA ──────────────────────────────────────────
+    // ── Cargar estado del servidor al reconectar ────────────────────────────────
+    useEffect(() => {
+        if (!isOnline || !initialGameId) return;
+
+        async function fetchGameState() {
+            try {
+                const res = await fetch(`${API}/game/${initialGameId}`);
+                const data = await res.json();
+                if (data && !data.statusCode) {
+                    setBoard(data.board || "_________");
+                    setStatus(data.status === "playing" ? "playing" : data.status);
+                    setWinner(data.winner);
+                }
+            } catch (e) {
+                console.error("Error al cargar estado del juego:", e);
+            }
+        }
+        fetchGameState();
+    }, [isOnline, initialGameId]);
+
+    // ── Crear partida local ────────────────────────────────────────────────────
     const newGame = async () => {
         if (isOnline) return;
         setLoading(true); setError(null); setAiThinking(false);
@@ -145,7 +168,7 @@ export default function TicTacToe({
     // ── Mover ────────────────────────────────────────────────────────────────
     const move = async (pos: number) => {
         if (status !== "playing" || cells[pos] !== "_") return;
-        if (isAIGame && !isP1Turn) return; // bloquear si es turno de la IA
+        if (isAIGame && !isP1Turn) return;
         if (isOnline && (!isMyTurn || !socket || !roomId || !gameId)) return;
         setError(null);
 
