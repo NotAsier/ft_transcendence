@@ -8,7 +8,6 @@ interface PlayerListProps {
   onSendRequest: (userId: number) => void;
   onAcceptRequest: (userId: number) => void;
   onRemoveFriend: (userId: number) => void;
-  onStartGame: (user: User) => void;
   onReconnectGame: (pending: PendingGame) => void;
   onLoadProfile: (userId: number) => void;
 }
@@ -20,7 +19,6 @@ export default function PlayerList({
   onSendRequest,
   onAcceptRequest,
   onRemoveFriend,
-  onStartGame,
   onReconnectGame,
   onLoadProfile,
 }: PlayerListProps) {

@@ -253,7 +253,7 @@ export default function Home() {
     setIsOnlineGame(true);
   };
 
-  const handleGameEnd = (gameId: number, opponentId: number) => {
+  const handleGameEnd = (_gameId: number, opponentId: number) => {
     // Limpiar partida pendiente cuando termina
     setPendingGamesByUser(prev => ({ ...prev, [opponentId]: null }));
   };
@@ -388,7 +388,6 @@ export default function Home() {
               onSendRequest={sendRequest}
               onAcceptRequest={acceptRequest}
               onRemoveFriend={removeFriend}
-              onStartGame={setPlayer2}
               onReconnectGame={handleReconnectGame}
               onLoadProfile={handleLoadProfile}
             />
@@ -399,7 +398,6 @@ export default function Home() {
               pendingGames={pendingGamesByUser}
               onAcceptRequest={acceptRequest}
               onRemoveFriend={removeFriend}
-              onStartGame={setPlayer2}
               onReconnectGame={handleReconnectGame}
               onOpenChat={setChatWith}
               onLoadProfile={handleLoadProfile}

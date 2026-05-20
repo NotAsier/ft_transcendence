@@ -8,7 +8,6 @@ interface FriendsPanelProps {
   pendingGames: Record<number, PendingGame | null>;
   onAcceptRequest: (fromUserId: number) => void;
   onRemoveFriend: (userId: number) => void;
-  onStartGame: (user: User) => void;
   onReconnectGame: (pending: PendingGame) => void;
   onOpenChat: (user: User) => void;
   onLoadProfile: (userId: number) => void;
@@ -21,7 +20,6 @@ export default function FriendsPanel({
   pendingGames,
   onAcceptRequest,
   onRemoveFriend,
-  onStartGame,
   onReconnectGame,
   onOpenChat,
   onLoadProfile,
