@@ -282,7 +282,7 @@ export class GameService {
             orderBy: { playedAt: 'desc' },
         });
         if (!match) return null;
-        const playedAt = match.playedAt || match.updatedAt || match.createdAt || now;
+        const playedAt = match.playedAt || match.playedAt || match.finishedAt || now;
         if (now.getTime() - new Date(playedAt).getTime() > FIVE_MINUTES) return null;
         return {
             gameId: match.id,

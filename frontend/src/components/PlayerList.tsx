@@ -19,6 +19,7 @@ export default function PlayerList({
   onSendRequest,
   onAcceptRequest,
   onRemoveFriend,
+  //onStartGame,
   onReconnectGame,
   onLoadProfile,
 }: PlayerListProps) {

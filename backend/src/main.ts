@@ -3,6 +3,10 @@ import { AppModule } from './app.module';
 import { join } from 'path';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import * as express from 'express';
+import * as client from 'prom-client';
+
+
+client.collectDefaultMetrics();
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const session = require('express-session');
