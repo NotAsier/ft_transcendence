@@ -1,12 +1,6 @@
 import { Controller, Get, Res } from '@nestjs/common';
 import type { Response } from 'express';
-import * as client from 'prom-client';
-
-const register = new client.Registry();
-
-client.collectDefaultMetrics({
-  register,
-});
+import { register } from './metrics.registry';
 
 @Controller('metrics')
 export class MetricsController {
