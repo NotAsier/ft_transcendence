@@ -36,7 +36,7 @@ import {
 		tap(() => {
 		  const duration = (Date.now() - start) / 1000;
   
-		  const route = req.originalUrl || req.url;
+		  const route = req.route?.path || req.originalUrl;
   
 		  const labels = {
 			method: req.method,

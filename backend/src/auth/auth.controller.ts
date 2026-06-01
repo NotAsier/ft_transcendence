@@ -1,6 +1,7 @@
 import { Controller, Post, Body, Get, Req, Res, UseGuards } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { AuthService } from './auth.service';
+import { JwtAuthGuard  } from './jwt-auth.guard';
 
 class RegisterDto {
   email: string;
@@ -42,5 +43,11 @@ export class AuthController {
   googleCallback(@Req() req: any, @Res() res: any) {
     const token = req.user.access_token;
     res.redirect(`/?token=${token}`);
+  }
+
+  @Get('me')
+  @UseGuards(JwtAuthGuard)
+  me(@Req() req) {
+    return req.user;
   }
 }
