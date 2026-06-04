@@ -12,6 +12,9 @@ import { MetricsController } from './metrics/metrics.controller';
 import { MetricsService } from './metrics/metrics.service';
 import { HttpMetricsInterceptor } from './metrics/http-metrics.interceptor';
 
+//import { LoggerService } from './logger/logger.service';
+//import { UserActivityInterceptor } from './logger/user-activity.interceptor';
+
 @Module({
   imports: [
     PrismaModule,
@@ -28,6 +31,11 @@ import { HttpMetricsInterceptor } from './metrics/http-metrics.interceptor';
       provide: APP_INTERCEPTOR,
       useClass: HttpMetricsInterceptor,
     },
+    // LoggerService,
+    // {
+    //   provide: APP_INTERCEPTOR,
+    //   useClass: UserActivityInterceptor,
+    // },
   ],
 })
 export class AppModule {}

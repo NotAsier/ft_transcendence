@@ -5,7 +5,9 @@ import { startProcessMetrics } from './metrics/metrics.process';
 import { HttpMetricsInterceptor } from './metrics/http-metrics.interceptor';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create(AppModule, {
+    logger: false,
+  });
 
   app.setGlobalPrefix('api');
 
