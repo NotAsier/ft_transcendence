@@ -5,6 +5,13 @@ import { PrismaService } from '../prisma/prisma.service';
 export class GameService {
     constructor(private readonly prisma: PrismaService) {}
 
+    async getUsersByIds(ids: number[]) {
+        return this.prisma.user.findMany({
+            where:  { id: { in: ids } },
+            select: { id: true, username: true, displayName: true, avatarUrl: true },
+        });
+    }
+
     async createGame(player1Id: number) {
         return this.prisma.match.create({
             data: {

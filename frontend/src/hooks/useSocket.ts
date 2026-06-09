@@ -20,6 +20,7 @@ interface UseSocketOptions {
     player1Username?: string;
     player2Username?: string;
   }) => void;
+  onOnlineUsersSnapshot: (users: User[]) => void;
 }
 
 export function useSocket({
@@ -33,6 +34,7 @@ export function useSocket({
   onInvitationError,
   onInvitationRejected,
   onGameStart,
+  onOnlineUsersSnapshot,
 }: UseSocketOptions) {
   const socketRef = useRef<Socket | null>(null);
 
@@ -89,6 +91,10 @@ export function useSocket({
       player2Username?: string;
     }) => {
       onGameStart(data);
+    });
+
+    socket.on("online_users_snapshot", ({ users }: { users: User[] }) => {
+      onOnlineUsersSnapshot(users);
     });
 
     return () => {

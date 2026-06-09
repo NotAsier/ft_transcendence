@@ -43,6 +43,7 @@ export default function Home() {
   const [pendingInvitation, setPendingInvitation] = useState<{ fromUserId: number; fromUsername: string } | null>(null);
   const [invitationSent, setInvitationSent]     = useState<number | null>(null);
   const [onlineFriends, setOnlineFriends]       = useState<number[]>([]);
+  const [onlinePlayers, setOnlinePlayers]       = useState<User[]>([]);
 
   // Chat
   const [chatWith, setChatWith]   = useState<User | null>(null);
@@ -107,13 +108,21 @@ export default function Home() {
   const socketRef = useSocket({
     player1,
     friends,
-    onUserConnected: useCallback((userId: number) => {
-      if (friends.some((f) => f.id === userId)) {
-        setOnlineFriends((prev) => [...new Set([...prev, userId])]);
+    onUserConnected: useCallback(async (userId: number) => {
+      if (player1) {
+        const user = await loadProfile(userId, player1.token);
+        if (user) {
+          setOnlinePlayers((prev) => {
+            if (!prev.some((p) => p.id === user.id)) {
+              return [...prev, user];
+            }
+            return prev;
+          });
+        }
       }
-    }, [friends]),
+    }, [player1, loadProfile]),
     onUserDisconnected: useCallback((userId: number) => {
-      setOnlineFriends((prev) => prev.filter((id) => id !== userId));
+      setOnlinePlayers((prev) => prev.filter((p) => p.id !== userId));
     }, []),
     onOnlineFriends: useCallback((ids: number[]) => {
       setOnlineFriends(ids);
@@ -156,6 +165,9 @@ export default function Home() {
       setIsOnlineGame(true);
       setPlayer2(opponent);
     }, [player1, users, friends]),
+    onOnlineUsersSnapshot: useCallback((users: User[]) => {
+      setOnlinePlayers(users.filter((u) => u.id !== player1?.id));
+    }, [player1]),
   });
 
   // ── Auth ─────────────────────────────────────────────────────────────────────
@@ -382,7 +394,7 @@ export default function Home() {
           {/* Right column */}
           <div style={{ flex: "0 0 24%", display: "flex", flexDirection: "column", gap: 16 }}>
             <PlayerList
-              users={users}
+              users={onlinePlayers.filter((u) => u.id !== player1.id)}
               friendStatus={friendStatus}
               pendingGames={pendingGamesByUser}
               onSendRequest={sendRequest}

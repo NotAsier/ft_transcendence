@@ -55,11 +55,24 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
             this.connectedUsers.set(payload.sub, client.id);
             console.log(`[Game] Usuario ${payload.sub} conectado (${client.id})`);
             this.server.emit('user_connected', { userId: payload.sub });
+
+            // Send snapshot of currently online users to the newly connected client
+            this.sendOnlineUsersSnapshot(client, payload.sub);
         } catch {
             // Bad token — disconnect only if a token was actually supplied.
             if (client.handshake.auth?.token) {
                 client.disconnect();
             }
+        }
+    }
+
+    private async sendOnlineUsersSnapshot(client: Socket, currentUserId: number) {
+        const otherOnlineUserIds = Array.from(this.connectedUsers.keys())
+            .filter(id => id !== currentUserId);
+
+        if (otherOnlineUserIds.length > 0) {
+            const otherOnlineUsers = await this.gameService.getUsersByIds(otherOnlineUserIds);
+            client.emit('online_users_snapshot', { users: otherOnlineUsers });
         }
     }
 
