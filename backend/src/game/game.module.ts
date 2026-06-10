@@ -4,18 +4,19 @@ import { GameController } from './game.controller';
 import { GameService } from './game.service';
 import { GameGateway } from './game.gateway';
 import { PrismaService } from '../prisma/prisma.service';
+import { GameMetrics } from './game.metrics';
 
 @Module({
-    imports: [
-        JwtModule.registerAsync({
-            useFactory: () => ({
-                secret:       process.env.JWT_SECRET,
-                signOptions:  { expiresIn: '7d' },
-            }),
-        }),
-    ],
-    controllers: [GameController],
-    providers:   [GameService, GameGateway, PrismaService],
-    exports:     [GameService],
+  imports: [
+    JwtModule.registerAsync({
+      useFactory: () => ({
+        secret: process.env.JWT_SECRET,
+        signOptions: { expiresIn: '7d' },
+      }),
+    }),
+  ],
+  controllers: [GameController],
+  providers: [GameService, GameGateway, PrismaService, GameMetrics],
+  exports: [GameService],
 })
 export class GameModule {}

@@ -1,11 +1,10 @@
 export declare class ChatMetrics {
-    private readonly registry;
-    private connections;
-    private disconnects;
-    private channelMessages;
-    private directMessages;
-    private historyRequests;
-    private latency;
+    private readonly connections;
+    private readonly disconnects;
+    private readonly channelMessages;
+    private readonly directMessages;
+    private readonly historyRequests;
+    private readonly latency;
     incConnections(): void;
     incDisconnects(): void;
     incChannelMessages(): void;

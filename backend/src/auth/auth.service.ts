@@ -2,6 +2,7 @@ import { Injectable, UnauthorizedException, ConflictException, BadRequestExcepti
 import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from '../prisma/prisma.service';
 import * as bcrypt from 'bcrypt';
+import { UserMetrics } from '../user/user.metrics';
 
 
 @Injectable()
@@ -9,6 +10,7 @@ export class AuthService {
   constructor(
     private prisma: PrismaService,
     private jwtService: JwtService,
+    private userMetrcs: UserMetrics,
   ) {}
 
   async register(
@@ -47,6 +49,9 @@ export class AuthService {
       },
     });
 
+    console.log('REGISTER HIT');
+
+   this.userMetrcs.incCreated();
     return this.signToken(user.id, user.email);
   }
 
@@ -59,7 +64,11 @@ export class AuthService {
     const valid = await bcrypt.compare(password, user.password);
     if (!valid) throw new UnauthorizedException('Credenciales incorrectas');
 
+    this.userMetrcs.incLogin();
+    this.userMetrcs.incOnline();
+
     return this.signToken(user.id, user.email);
+ 
   }
 
   async findOrCreateGoogleUser(profile: {

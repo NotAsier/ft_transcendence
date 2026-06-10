@@ -17,10 +17,13 @@ const auth_service_1 = require("./auth.service");
 let GoogleStrategy = class GoogleStrategy extends (0, passport_1.PassportStrategy)(passport_google_oauth20_1.Strategy, 'google') {
     authService;
     constructor(authService) {
+        const clientID = process.env.OAUTH_CLIENT_ID || 'dummy';
+        const clientSecret = process.env.OAUTH_CLIENT_SECRET || 'dummy';
+        const callbackURL = process.env.OAUTH_CALLBACK_URL || 'http://localhost:3000/auth/google/callback';
         super({
-            clientID: process.env.OAUTH_CLIENT_ID,
-            clientSecret: process.env.OAUTH_CLIENT_SECRET,
-            callbackURL: process.env.OAUTH_CALLBACK_URL,
+            clientID,
+            clientSecret,
+            callbackURL,
             scope: ['email', 'profile'],
         });
         this.authService = authService;

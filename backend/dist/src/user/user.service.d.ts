@@ -6,29 +6,29 @@ export declare class UserService {
         id: number;
         email: string;
         username: string;
-        wins: number;
         displayName: string | null;
         avatarUrl: string | null;
+        createdAt: Date;
+        wins: number;
         birthDate: Date | null;
         country: string | null;
         gender: string | null;
-        createdAt: Date;
     } | null>;
     updateMe(userId: number, data: any): Promise<{
         id: number;
         email: string;
         username: string;
         oauthId: string | null;
-        wins: number;
         displayName: string | null;
         avatarUrl: string | null;
-        birthDate: Date | null;
-        country: string | null;
-        gender: string | null;
         createdAt: Date;
         updatedAt: Date;
         oauthProvider: string | null;
         password: string | null;
+        wins: number;
+        birthDate: Date | null;
+        country: string | null;
+        gender: string | null;
     }>;
     getAll(): Promise<{
         id: number;
@@ -70,12 +70,12 @@ export declare class UserService {
     getUser(id: number): Promise<{
         id: number;
         username: string;
-        wins: number;
         displayName: string | null;
+        createdAt: Date;
+        wins: number;
         birthDate: Date | null;
         country: string | null;
         gender: string | null;
-        createdAt: Date;
     } | null>;
     getFriends(userId: number): Promise<{
         id: number;
@@ -88,8 +88,8 @@ export declare class UserService {
     getLeaderboard(): Promise<{
         id: number;
         username: string;
-        wins: number;
         displayName: string | null;
+        wins: number;
         country: string | null;
     }[]>;
 }

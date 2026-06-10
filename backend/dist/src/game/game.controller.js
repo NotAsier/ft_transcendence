@@ -28,7 +28,6 @@ let GameController = class GameController {
         return this.gameService.joinGame(gameId, player2Id);
     }
     getHistory(req) {
-        console.log('=== [controller] req.user:', req.user);
         return this.gameService.getHistory(req.user.userId);
     }
     getGameState(id) {
@@ -40,9 +39,8 @@ let GameController = class GameController {
     aiMove(id, difficulty) {
         return this.gameService.aiMove(id, difficulty);
     }
-    async getPendingGame(req, opponentId) {
-        const userId = req.user.userId;
-        return this.gameService.getPendingGame(userId, opponentId);
+    getPendingGame(req, opponentId) {
+        return this.gameService.getPendingGame(req.user.userId, opponentId);
     }
 };
 exports.GameController = GameController;
@@ -100,7 +98,7 @@ __decorate([
     __param(1, (0, common_1.Param)('opponentId', common_1.ParseIntPipe)),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object, Number]),
-    __metadata("design:returntype", Promise)
+    __metadata("design:returntype", void 0)
 ], GameController.prototype, "getPendingGame", null);
 exports.GameController = GameController = __decorate([
     (0, common_1.Controller)('game'),

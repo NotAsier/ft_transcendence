@@ -1,26 +1,12 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 
-import { startProcessMetrics } from './metrics/metrics.process';
-import { HttpMetricsInterceptor } from './metrics/http-metrics.interceptor';
-
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule, {
-    logger: false,
-  });
-
-  app.setGlobalPrefix('api');
-
-  // activa métricas HTTP
-  app.useGlobalInterceptors(new HttpMetricsInterceptor());
-
-  // activa métricas de proceso
-  startProcessMetrics();
-
-  await app.listen(3000, '0.0.0.0');
-
+  console.log('BOOTSTRAP START');
+  const app = await NestFactory.create(AppModule);
+  app.setGlobalPrefix('api');  // ← añade esta línea
   console.log('APP CREATED');
+  await app.listen(3000, '0.0.0.0');  // ← también 0.0.0.0 para Docker
   console.log('LISTENING 3000');
 }
-
 bootstrap();

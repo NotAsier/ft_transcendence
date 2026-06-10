@@ -12,10 +12,13 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.GameService = void 0;
 const common_1 = require("@nestjs/common");
 const prisma_service_1 = require("../prisma/prisma.service");
+const game_metrics_1 = require("./game.metrics");
 let GameService = class GameService {
     prisma;
-    constructor(prisma) {
+    metrics;
+    constructor(prisma, metrics) {
         this.prisma = prisma;
+        this.metrics = metrics;
     }
     async getUsersByIds(ids) {
         return this.prisma.user.findMany({
@@ -24,6 +27,7 @@ let GameService = class GameService {
         });
     }
     async createGame(player1Id) {
+        this.metrics.incCreated();
         return this.prisma.match.create({
             data: {
                 player1: { connect: { id: player1Id } },
@@ -40,13 +44,15 @@ let GameService = class GameService {
             throw new common_1.BadRequestException('La partida ya está en curso o terminada');
         if (game.player1Id === player2Id)
             throw new common_1.BadRequestException('No puedes unirte a tu propia partida');
-        return this.prisma.match.update({
+        const updated = await this.prisma.match.update({
             where: { id: gameId },
             data: {
                 player2: { connect: { id: player2Id } },
                 status: 'playing',
             },
         });
+        this.metrics.incStarted();
+        return updated;
     }
     async getGameState(gameId) {
         const game = await this.prisma.match.findUnique({
@@ -61,6 +67,7 @@ let GameService = class GameService {
         return game;
     }
     async makeMove(gameId, playerId, position) {
+        this.metrics.incMove();
         const game = await this.prisma.match.findUnique({ where: { id: gameId } });
         if (!game)
             throw new common_1.NotFoundException('Partida no encontrada');
@@ -92,24 +99,34 @@ let GameService = class GameService {
                 winner: winnerVal,
                 status: isFinished ? 'finished' : 'playing',
                 finishedAt: isFinished ? new Date() : null,
-                score1: (hasWinner && isP1Turn) ? { increment: 1 } : undefined,
-                score2: (hasWinner && !isP1Turn) ? { increment: 1 } : undefined,
+                score1: hasWinner && isP1Turn ? { increment: 1 } : undefined,
+                score2: hasWinner && !isP1Turn ? { increment: 1 } : undefined,
             },
         });
+        if (isFinished) {
+            this.metrics.incFinished();
+            const active = await this.prisma.match.count({
+                where: { status: 'playing' },
+            });
+            this.metrics.setActive(active);
+        }
         if (hasWinner) {
             const winnerId = isP1Turn
-                ? (updatedGame.player1Id ?? undefined)
-                : (updatedGame.player2Id ?? undefined);
+                ? updatedGame.player1Id ?? undefined
+                : updatedGame.player2Id ?? undefined;
             if (winnerId) {
                 const player1User = await this.prisma.user.findUnique({
                     where: { id: updatedGame.player1Id },
                     select: { username: true },
                 });
-                const player2User = updatedGame.player2Id ? await this.prisma.user.findUnique({
-                    where: { id: updatedGame.player2Id },
-                    select: { username: true },
-                }) : null;
-                const isVsAI = player1User?.username === 'Guest' || player2User?.username === 'Guest';
+                const player2User = updatedGame.player2Id
+                    ? await this.prisma.user.findUnique({
+                        where: { id: updatedGame.player2Id },
+                        select: { username: true },
+                    })
+                    : null;
+                const isVsAI = player1User?.username === 'Guest' ||
+                    player2User?.username === 'Guest';
                 if (!isVsAI) {
                     await this.prisma.user.update({
                         where: { id: winnerId },
@@ -121,7 +138,6 @@ let GameService = class GameService {
         return updatedGame;
     }
     async getHistory(userId) {
-        console.log('=== [getHistory] userId:', userId);
         const matches = await this.prisma.match.findMany({
             where: {
                 status: 'finished',
@@ -134,9 +150,7 @@ let GameService = class GameService {
             orderBy: { finishedAt: 'desc' },
             take: 50,
         });
-        console.log('=== [getHistory] matches found:', matches.length);
-        console.log('=== [getHistory] matches:', JSON.stringify(matches));
-        const result = matches.map((m) => {
+        return matches.map((m) => {
             const isPlayer1 = m.player1Id === userId;
             const opponent = isPlayer1 ? m.player2 : m.player1;
             let result;
@@ -158,23 +172,30 @@ let GameService = class GameService {
                 playedAt: m.playedAt,
                 finishedAt: m.finishedAt,
                 result,
-                opponentName: opponent?.displayName ?? opponent?.username ?? (m.isVsAI ? 'IA' : '—'),
+                opponentName: opponent?.displayName ??
+                    opponent?.username ??
+                    (m.isVsAI ? 'IA' : '—'),
                 playerMark: isPlayer1 ? 'X' : 'O',
             };
         });
-        console.log('=== [getHistory] returning:', result.length, 'items');
-        return result;
     }
     checkWinner(board) {
         const lines = [
-            [0, 1, 2], [3, 4, 5], [6, 7, 8],
-            [0, 3, 6], [1, 4, 7], [2, 5, 8],
-            [0, 4, 8], [2, 4, 6],
+            [0, 1, 2],
+            [3, 4, 5],
+            [6, 7, 8],
+            [0, 3, 6],
+            [1, 4, 7],
+            [2, 5, 8],
+            [0, 4, 8],
+            [2, 4, 6],
         ];
-        return lines.some(([a, b, c]) => board[a] !== '_' && board[a] === board[b] && board[b] === board[c]);
+        return lines.some(([a, b, c]) => board[a] !== '_' &&
+            board[a] === board[b] &&
+            board[b] === board[c]);
     }
     printBoard(board) {
-        const b = board.split('').map(c => (c === '_' ? '·' : c));
+        const b = board.split('').map((c) => (c === '_' ? '·' : c));
         console.log('\n+---+---+---+');
         console.log(`| ${b[0]} | ${b[1]} | ${b[2]} |`);
         console.log('+---+---+---+');
@@ -195,9 +216,10 @@ let GameService = class GameService {
             position = this.randomMove(board);
         }
         else if (difficulty === 'medium') {
-            position = Math.random() < 0.3
-                ? this.randomMove(board)
-                : this.bestMove(board, 'O');
+            position =
+                Math.random() < 0.3
+                    ? this.randomMove(board)
+                    : this.bestMove(board, 'O');
         }
         else {
             position = this.bestMove(board, 'O');
@@ -205,7 +227,9 @@ let GameService = class GameService {
         return this.makeMove(gameId, game.player2Id, position);
     }
     randomMove(board) {
-        const empty = board.map((c, i) => c === '_' ? i : -1).filter(i => i !== -1);
+        const empty = board
+            .map((c, i) => (c === '_' ? i : -1))
+            .filter((i) => i !== -1);
         return empty[Math.floor(Math.random() * empty.length)];
     }
     bestMove(board, aiMark) {
@@ -258,15 +282,21 @@ let GameService = class GameService {
     }
     checkWinnerForMark(board, mark) {
         const lines = [
-            [0, 1, 2], [3, 4, 5], [6, 7, 8],
-            [0, 3, 6], [1, 4, 7], [2, 5, 8],
-            [0, 4, 8], [2, 4, 6],
+            [0, 1, 2],
+            [3, 4, 5],
+            [6, 7, 8],
+            [0, 3, 6],
+            [1, 4, 7],
+            [2, 5, 8],
+            [0, 4, 8],
+            [2, 4, 6],
         ];
-        return lines.some(([a, b, c]) => board[a] === mark && board[b] === mark && board[c] === mark);
+        return lines.some(([a, b, c]) => board[a] === mark &&
+            board[b] === mark &&
+            board[c] === mark);
     }
     async getPendingGame(userId, opponentId) {
         const FIVE_MINUTES = 5 * 60 * 1000;
-        const now = new Date();
         const match = await this.prisma.match.findFirst({
             where: {
                 status: 'playing',
@@ -279,8 +309,10 @@ let GameService = class GameService {
         });
         if (!match)
             return null;
-        const playedAt = match.playedAt || match.playedAt || match.finishedAt || now;
-        if (now.getTime() - new Date(playedAt).getTime() > FIVE_MINUTES)
+        const playedAt = match.playedAt || match.finishedAt;
+        if (!playedAt)
+            return null;
+        if (Date.now() - new Date(playedAt).getTime() > FIVE_MINUTES)
             return null;
         return {
             gameId: match.id,
@@ -294,6 +326,7 @@ let GameService = class GameService {
 exports.GameService = GameService;
 exports.GameService = GameService = __decorate([
     (0, common_1.Injectable)(),
-    __metadata("design:paramtypes", [prisma_service_1.PrismaService])
+    __metadata("design:paramtypes", [prisma_service_1.PrismaService,
+        game_metrics_1.GameMetrics])
 ], GameService);
 //# sourceMappingURL=game.service.js.map

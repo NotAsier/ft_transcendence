@@ -22,7 +22,6 @@ export class GameController {
   @UseGuards(JwtAuthGuard)
   @Get('history/me')
   getHistory(@Request() req: any) {
-    console.log('=== [controller] req.user:', req.user);
     return this.gameService.getHistory(req.user.userId);
   }
 
@@ -48,11 +47,9 @@ export class GameController {
     return this.gameService.aiMove(id, difficulty);
   }
 
-  // Endpoint para partidas pendientes: retorna la partida "playing" no terminada entre user y el oponente (si existe y en timeout)
   @UseGuards(JwtAuthGuard)
   @Get('pending/:opponentId')
-  async getPendingGame(@Request() req: any, @Param('opponentId', ParseIntPipe) opponentId: number) {
-    const userId = req.user.userId;
-    return this.gameService.getPendingGame(userId, opponentId);
+  getPendingGame(@Request() req: any, @Param('opponentId', ParseIntPipe) opponentId: number) {
+    return this.gameService.getPendingGame(req.user.userId, opponentId);
   }
 }

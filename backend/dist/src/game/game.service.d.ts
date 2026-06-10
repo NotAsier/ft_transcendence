@@ -1,7 +1,9 @@
 import { PrismaService } from '../prisma/prisma.service';
+import { GameMetrics } from './game.metrics';
 export declare class GameService {
     private readonly prisma;
-    constructor(prisma: PrismaService);
+    private readonly metrics;
+    constructor(prisma: PrismaService, metrics: GameMetrics);
     getUsersByIds(ids: number[]): Promise<{
         id: number;
         username: string;
@@ -10,29 +12,29 @@ export declare class GameService {
     }[]>;
     createGame(player1Id: number): Promise<{
         id: number;
-        isVsAI: boolean;
-        winner: string | null;
-        board: string;
-        status: string;
-        customRules: import("@prisma/client/runtime/library").JsonValue | null;
         score1: number;
         score2: number;
         playedAt: Date;
+        board: string;
+        customRules: import("@prisma/client/runtime/library").JsonValue | null;
         finishedAt: Date | null;
+        isVsAI: boolean;
+        status: string;
+        winner: string | null;
         player1Id: number;
         player2Id: number | null;
     }>;
     joinGame(gameId: number, player2Id: number): Promise<{
         id: number;
-        isVsAI: boolean;
-        winner: string | null;
-        board: string;
-        status: string;
-        customRules: import("@prisma/client/runtime/library").JsonValue | null;
         score1: number;
         score2: number;
         playedAt: Date;
+        board: string;
+        customRules: import("@prisma/client/runtime/library").JsonValue | null;
         finishedAt: Date | null;
+        isVsAI: boolean;
+        status: string;
+        winner: string | null;
         player1Id: number;
         player2Id: number | null;
     }>;
@@ -49,29 +51,29 @@ export declare class GameService {
         } | null;
     } & {
         id: number;
-        isVsAI: boolean;
-        winner: string | null;
-        board: string;
-        status: string;
-        customRules: import("@prisma/client/runtime/library").JsonValue | null;
         score1: number;
         score2: number;
         playedAt: Date;
+        board: string;
+        customRules: import("@prisma/client/runtime/library").JsonValue | null;
         finishedAt: Date | null;
+        isVsAI: boolean;
+        status: string;
+        winner: string | null;
         player1Id: number;
         player2Id: number | null;
     }>;
     makeMove(gameId: number, playerId: number, position: number): Promise<{
         id: number;
-        isVsAI: boolean;
-        winner: string | null;
-        board: string;
-        status: string;
-        customRules: import("@prisma/client/runtime/library").JsonValue | null;
         score1: number;
         score2: number;
         playedAt: Date;
+        board: string;
+        customRules: import("@prisma/client/runtime/library").JsonValue | null;
         finishedAt: Date | null;
+        isVsAI: boolean;
+        status: string;
+        winner: string | null;
         player1Id: number;
         player2Id: number | null;
     }>;
@@ -102,15 +104,15 @@ export declare class GameService {
     private printBoard;
     aiMove(gameId: number, difficulty: 'easy' | 'medium' | 'hard'): Promise<{
         id: number;
-        isVsAI: boolean;
-        winner: string | null;
-        board: string;
-        status: string;
-        customRules: import("@prisma/client/runtime/library").JsonValue | null;
         score1: number;
         score2: number;
         playedAt: Date;
+        board: string;
+        customRules: import("@prisma/client/runtime/library").JsonValue | null;
         finishedAt: Date | null;
+        isVsAI: boolean;
+        status: string;
+        winner: string | null;
         player1Id: number;
         player2Id: number | null;
     }>;

@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { APP_INTERCEPTOR } from '@nestjs/core';
+import { ConfigModule } from '@nestjs/config';
 
 import { PrismaModule } from './prisma/prisma.module';
 import { AuthModule } from './auth/auth.module';
@@ -12,11 +13,13 @@ import { MetricsController } from './metrics/metrics.controller';
 import { MetricsService } from './metrics/metrics.service';
 import { HttpMetricsInterceptor } from './metrics/http-metrics.interceptor';
 
-//import { LoggerService } from './logger/logger.service';
-//import { UserActivityInterceptor } from './logger/user-activity.interceptor';
-
 @Module({
   imports: [
+    ConfigModule.forRoot({
+      isGlobal: true,
+      envFilePath: '../.env',
+    }),
+
     PrismaModule,
     AuthModule,
     UserModule,
@@ -31,11 +34,6 @@ import { HttpMetricsInterceptor } from './metrics/http-metrics.interceptor';
       provide: APP_INTERCEPTOR,
       useClass: HttpMetricsInterceptor,
     },
-    // LoggerService,
-    // {
-    //   provide: APP_INTERCEPTOR,
-    //   useClass: UserActivityInterceptor,
-    // },
   ],
 })
 export class AppModule {}

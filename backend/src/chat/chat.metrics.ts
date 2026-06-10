@@ -1,49 +1,47 @@
 import { Injectable } from '@nestjs/common';
-import { Counter, Histogram, Registry } from 'prom-client';
+import { Counter, Histogram } from 'prom-client';
+import { register } from '../metrics/metrics.registry';
 
 @Injectable()
 export class ChatMetrics {
-  private readonly registry = new Registry();
-
-  private connections = new Counter({
+  private readonly connections = new Counter({
     name: 'chat_connections_total',
     help: 'Total chat connections',
-    registers: [this.registry],
+    registers: [register],
   });
 
-  private disconnects = new Counter({
+  private readonly disconnects = new Counter({
     name: 'chat_disconnects_total',
     help: 'Total chat disconnects',
-    registers: [this.registry],
+    registers: [register],
   });
 
-  private channelMessages = new Counter({
+  private readonly channelMessages = new Counter({
     name: 'chat_channel_messages_total',
     help: 'Total channel messages',
-    registers: [this.registry],
+    registers: [register],
   });
 
-  private directMessages = new Counter({
+  private readonly directMessages = new Counter({
     name: 'chat_direct_messages_total',
     help: 'Total direct messages',
-    registers: [this.registry],
+    registers: [register],
   });
 
-  private historyRequests = new Counter({
+  private readonly historyRequests = new Counter({
     name: 'chat_history_requests_total',
     help: 'Total history requests',
-    registers: [this.registry],
+    registers: [register],
   });
 
-  private latency = new Histogram({
+  private readonly latency = new Histogram({
     name: 'chat_message_latency_seconds',
     help: 'Chat message latency',
     buckets: [0.01, 0.05, 0.1, 0.3, 1, 2],
-    registers: [this.registry],
+    registers: [register],
   });
 
   incConnections() {
-	console.log('[METRICS] connection');
     this.connections.inc();
   }
 
@@ -52,12 +50,10 @@ export class ChatMetrics {
   }
 
   incChannelMessages() {
-	console.log('[METRICS] channel message');
     this.channelMessages.inc();
   }
 
   incDirectMessages() {
-	console.log('[METRICS] direct message');
     this.directMessages.inc();
   }
 
@@ -70,6 +66,6 @@ export class ChatMetrics {
   }
 
   getMetrics() {
-    return this.registry.metrics();
+    return register.metrics();
   }
 }

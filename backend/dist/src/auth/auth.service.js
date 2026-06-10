@@ -47,12 +47,15 @@ const common_1 = require("@nestjs/common");
 const jwt_1 = require("@nestjs/jwt");
 const prisma_service_1 = require("../prisma/prisma.service");
 const bcrypt = __importStar(require("bcrypt"));
+const user_metrics_1 = require("../user/user.metrics");
 let AuthService = class AuthService {
     prisma;
     jwtService;
-    constructor(prisma, jwtService) {
+    userMetrcs;
+    constructor(prisma, jwtService, userMetrcs) {
         this.prisma = prisma;
         this.jwtService = jwtService;
+        this.userMetrcs = userMetrcs;
     }
     async register(email, password, username, birthDate, country, gender) {
         const emailExists = await this.prisma.user.findUnique({ where: { email } });
@@ -84,6 +87,8 @@ let AuthService = class AuthService {
                 gender: gender ?? null,
             },
         });
+        console.log('REGISTER HIT');
+        this.userMetrcs.incCreated();
         return this.signToken(user.id, user.email);
     }
     async login(email, password) {
@@ -95,6 +100,8 @@ let AuthService = class AuthService {
         const valid = await bcrypt.compare(password, user.password);
         if (!valid)
             throw new common_1.UnauthorizedException('Credenciales incorrectas');
+        this.userMetrcs.incLogin();
+        this.userMetrcs.incOnline();
         return this.signToken(user.id, user.email);
     }
     async findOrCreateGoogleUser(profile) {
@@ -143,6 +150,7 @@ exports.AuthService = AuthService;
 exports.AuthService = AuthService = __decorate([
     (0, common_1.Injectable)(),
     __metadata("design:paramtypes", [prisma_service_1.PrismaService,
-        jwt_1.JwtService])
+        jwt_1.JwtService,
+        user_metrics_1.UserMetrics])
 ], AuthService);
 //# sourceMappingURL=auth.service.js.map

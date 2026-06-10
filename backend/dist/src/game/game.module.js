@@ -13,6 +13,7 @@ const game_controller_1 = require("./game.controller");
 const game_service_1 = require("./game.service");
 const game_gateway_1 = require("./game.gateway");
 const prisma_service_1 = require("../prisma/prisma.service");
+const game_metrics_1 = require("./game.metrics");
 let GameModule = class GameModule {
 };
 exports.GameModule = GameModule;
@@ -27,7 +28,7 @@ exports.GameModule = GameModule = __decorate([
             }),
         ],
         controllers: [game_controller_1.GameController],
-        providers: [game_service_1.GameService, game_gateway_1.GameGateway, prisma_service_1.PrismaService],
+        providers: [game_service_1.GameService, game_gateway_1.GameGateway, prisma_service_1.PrismaService, game_metrics_1.GameMetrics],
         exports: [game_service_1.GameService],
     })
 ], GameModule);
