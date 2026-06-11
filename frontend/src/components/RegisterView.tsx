@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { s } from "../styles";
+import { makeStyles } from "../styles";
+import { useTheme } from "../context/ThemeContext";
 
 const COUNTRIES = [
   "Afghanistan","Albania","Algeria","Andorra","Angola","Argentina","Armenia","Australia",
@@ -25,12 +26,8 @@ const COUNTRIES = [
 
 interface RegisterViewProps {
   onSuccess: (data: {
-    email: string;
-    username: string;
-    password: string;
-    birthDate?: string;
-    country?: string;
-    gender?: string;
+    email: string; username: string; password: string;
+    birthDate?: string; country?: string; gender?: string;
   }) => Promise<void>;
   onBack: () => void;
   loading: boolean;
@@ -38,6 +35,8 @@ interface RegisterViewProps {
 }
 
 export default function RegisterView({ onSuccess, onBack, loading, error }: RegisterViewProps) {
+  const { theme } = useTheme();
+  const s = makeStyles(theme);
   const [email, setEmail]         = useState("");
   const [username, setUsername]   = useState("");
   const [password, setPassword]   = useState("");

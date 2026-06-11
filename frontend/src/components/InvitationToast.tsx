@@ -1,4 +1,5 @@
-import { s } from "../styles";
+import { makeStyles } from "../styles";
+import { useTheme } from "../context/ThemeContext";
 
 interface InvitationToastProps {
   fromUsername: string;
@@ -7,10 +8,13 @@ interface InvitationToastProps {
 }
 
 export default function InvitationToast({ fromUsername, onAccept, onReject }: InvitationToastProps) {
+  const { theme } = useTheme();
+  const s = makeStyles(theme);
+
   return (
     <div style={{
       position: "fixed", top: 24, right: 24, width: 300,
-      background: "#1a1a1a", border: "1px solid #4ecdc4",
+      background: theme.surface, border: "1px solid #4ecdc4",
       borderRadius: 8, padding: 20, zIndex: 2000,
       fontFamily: "'Courier New', monospace",
       boxShadow: "0 0 30px rgba(78,205,196,0.2)",
@@ -18,8 +22,8 @@ export default function InvitationToast({ fromUsername, onAccept, onReject }: In
       <p style={{ color: "#4ecdc4", fontSize: 12, letterSpacing: 2, margin: "0 0 8px 0" }}>
         INVITACIÓN RECIBIDA
       </p>
-      <p style={{ color: "#aaa", fontSize: 12, margin: "0 0 16px 0" }}>
-        <strong style={{ color: "#fff" }}>{fromUsername}</strong> te ha invitado a jugar
+      <p style={{ color: theme.textMuted, fontSize: 12, margin: "0 0 16px 0" }}>
+        <strong style={{ color: theme.text }}>{fromUsername}</strong> te ha invitado a jugar
       </p>
       <div style={{ display: "flex", gap: 8 }}>
         <button
