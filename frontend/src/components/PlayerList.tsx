@@ -7,15 +7,14 @@ interface PlayerListProps {
   friendStatus: Record<number, FriendStatus>;
   pendingGames: Record<number, PendingGame | null>;
   onSendRequest: (userId: number) => void;
-  onAcceptRequest: (userId: number) => void;
-  onRemoveFriend: (userId: number) => void;
+  
   onReconnectGame: (pending: PendingGame) => void;
   onLoadProfile: (userId: number) => void;
 }
 
 export default function PlayerList({
   users, friendStatus, pendingGames,
-  onSendRequest, onAcceptRequest, onRemoveFriend, onReconnectGame, onLoadProfile,
+  onSendRequest, onReconnectGame, onLoadProfile,
 }: PlayerListProps) {
   const { theme } = useTheme();
   const s = makeStyles(theme);

@@ -388,8 +388,7 @@ export default function Home() {
                             friendStatus={friendStatus}
                             pendingGames={pendingGamesByUser}
                             onSendRequest={sendRequest}
-                            onAcceptRequest={acceptRequest}
-                            onRemoveFriend={removeFriend}
+
                             onReconnectGame={handleReconnectGame}
                             onLoadProfile={handleLoadProfile}
                         />
