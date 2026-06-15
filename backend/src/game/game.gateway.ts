@@ -197,6 +197,73 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
         }
     }
 
+    // ── Reconnection & Room Management ────────────────────────────────────────
+
+    /**
+     * Event: 'join_game_room'
+     * Payload: { roomId: string; gameId: number }
+     *
+     * Called when a player reconnects to an ongoing game. This handler:
+     * 1. Verifies the player is part of the game
+     * 2. Joins the socket to the game room
+     * 3. Sends the current game state to the player
+     *
+     * This fixes the issue where a player who refreshes the page doesn't receive
+     * game updates because their new socket isn't in the room.
+     */
+    @SubscribeMessage('join_game_room')
+    async handleJoinGameRoom(
+        @ConnectedSocket() client: Socket,
+        @MessageBody() data: { roomId: string; gameId: number },
+    ) {
+        const userId = client.data.userId as number | undefined;
+
+        if (!userId) {
+            client.emit('error', { message: 'No autenticado' });
+            return;
+        }
+
+        try {
+            // Verify user is part of this game
+            const game = await this.gameService.getGameState(data.gameId);
+
+            if (game.player1Id !== userId && game.player2Id !== userId) {
+                client.emit('error', { message: 'No eres parte de este juego' });
+                return;
+            }
+
+            // Join the socket to the game room
+            client.join(data.roomId);
+            console.log(`[Game] Usuario ${userId} se reunió a sala ${data.roomId}`);
+
+            // Send current game state to the reconnected player
+            client.emit('game_state_sync', {
+                board: game.board,
+                status: game.status,
+                winner: game.winner,
+                player1Id: game.player1Id,
+                player2Id: game.player2Id,
+            });
+        } catch (e: any) {
+            client.emit('error', { message: e.message });
+        }
+    }
+
+    /**
+     * Event: 'leave_game_room'
+     * Payload: { roomId: string }
+     *
+     * Called when a player leaves a game room (optional cleanup).
+     */
+    @SubscribeMessage('leave_game_room')
+    handleLeaveGameRoom(
+        @ConnectedSocket() client: Socket,
+        @MessageBody() data: { roomId: string },
+    ) {
+        client.leave(data.roomId);
+        console.log(`[Game] Usuario ${client.data.userId} salió de sala ${data.roomId}`);
+    }
+
     // ── In-game moves ──────────────────────────────────────────────────────────
 
     /**

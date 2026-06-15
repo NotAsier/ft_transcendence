@@ -93,6 +93,34 @@ export default function TicTacToe({
         doAiMove();
     }, [isAIGame, gameId, status, isP1Turn, loading, aiThinking]);
 
+    // ── Reunirse a la sala al reconectar (FIX: Prevenir que no vea los cambios después de refrescar)
+    useEffect(() => {
+        if (!isOnline || !socket || !roomId || !initialGameId) return;
+
+        // Emitir evento para unirse a la sala
+        socket.emit("join_game_room", { roomId, gameId: initialGameId });
+
+        // Listener para sincronizar estado cuando se reconnecta
+        const onGameStateSync = (data: {
+            board: string;
+            status: string;
+            winner: string | null;
+            player1Id: number;
+            player2Id: number;
+        }) => {
+            setBoard(data.board);
+            setStatus(data.status === "playing" ? "playing" : data.status);
+            setWinner(data.winner);
+        };
+
+        socket.on("game_state_sync", onGameStateSync);
+
+        return () => {
+            socket.off("game_state_sync", onGameStateSync);
+            socket.emit("leave_game_room", { roomId });
+        };
+    }, [isOnline, socket, roomId, initialGameId]);
+
     // ── Listeners online ─────────────────────────────────────────────────────
     useEffect(() => {
         if (!isOnline || !socket) return;
