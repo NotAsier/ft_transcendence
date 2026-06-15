@@ -415,7 +415,7 @@ export default function Home() {
                         FT TRANSCENDENCE
                     </h1>
 
-                    {/* Selector de temas */}
+ 					{/* Selector de temas */}
                     <div style={{ display: "flex", gap: 8 }}>
                         {themeOptions.map(({ key, label }) => (
                             <button
@@ -434,7 +434,30 @@ export default function Home() {
                             </button>
                         ))}
                     </div>
-                </div>
+
+                    {/* Legal links */}
+                    <div style={{ display: "flex", gap: 16 }}>
+                        <a
+                            href="/privacy-policy" target="_blank"
+                            style={{ fontSize: 10, color: theme.textDim, letterSpacing: 1,
+                                textDecoration: "none", opacity: 0.6 }}
+                            onMouseEnter={e => (e.currentTarget.style.opacity = "1")}
+                            onMouseLeave={e => (e.currentTarget.style.opacity = "0.6")}
+                        >
+                            PRIVACY POLICY
+                        </a>
+                        <a
+                            href="/terms-of-service" target="_blank"
+                            style={{ fontSize: 10, color: theme.textDim, letterSpacing: 1,
+                                textDecoration: "none", opacity: 0.6 }}
+                            onMouseEnter={e => (e.currentTarget.style.opacity = "1")}
+                            onMouseLeave={e => (e.currentTarget.style.opacity = "0.6")}
+                        >
+                            TERMS OF SERVICE
+                        </a>
+                    </div>
+
+                    </div>
 
                 {/* Floating chat */}
                 {chatWith && (
