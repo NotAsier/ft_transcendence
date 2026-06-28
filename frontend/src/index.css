@@ -128,6 +128,8 @@ code {
   .carousel-column {
     flex: 0 0 100vw;
     min-width: 100vw;
+    padding: 0 16px;
+    box-sizing: border-box;
     scroll-snap-align: start;
     overflow-y: auto;
     overflow-x: hidden;

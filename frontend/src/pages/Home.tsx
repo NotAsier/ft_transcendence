@@ -403,7 +403,7 @@ export default function Home() {
             <div style={{
                 display: "flex", flexDirection: "column", width: "100vw", height: "100vh",
                 background: theme.background, fontFamily: "'Courier New', monospace",
-                boxSizing: "border-box", padding: 20, gap: 16,
+                boxSizing: "border-box", padding: isMobile ? "20px 0" : 20, gap: 16,
             }}>
                 {/* Main row - Desktop layout or Carousel for mobile/tablet */}
                 {isMobile ? (
@@ -423,7 +423,7 @@ export default function Home() {
                             }}
                         >
                             {/* Column 1: Profile Panel */}
-                            <div className="carousel-column" style={{ flex: "0 0 100vw" }}>
+                            <div className="carousel-column">
                                 <ProfilePanel
                                     player1={player1}
                                     selectedProfile={selectedProfile}
@@ -435,7 +435,7 @@ export default function Home() {
                             </div>
 
                             {/* Column 2: Game Center */}
-                            <div className="carousel-column" style={{ flex: "0 0 100vw" }}>
+                            <div className="carousel-column">
                                 <GameCenter
                                     player1={player1}
                                     player2={player2}
@@ -456,7 +456,7 @@ export default function Home() {
                             </div>
 
                             {/* Column 3: Player List & Friends */}
-                            <div className="carousel-column" style={{ flex: "0 0 100vw" }}>
+                            <div className="carousel-column">
                                 <div style={{ display: "flex", flexDirection: "column", gap: 16, flex: 1, minHeight: 0 }}>
                                     <PlayerList
                                         users={onlinePlayers.filter((u) => u.id !== player1.id)}
