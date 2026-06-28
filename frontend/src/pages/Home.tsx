@@ -1,7 +1,8 @@
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import type { View, Player, User, UserProfile } from "../types";
 import { useSocial } from "../hooks/useSocial";
 import { useSocket } from "../hooks/useSocket";
+import { useIsMobile } from "../utils/breakpoints";
 
 import LoginView        from "../components/LoginView";
 import RegisterView     from "../components/RegisterView";
@@ -51,6 +52,14 @@ export default function Home() {
     const [chatWith, setChatWith]         = useState<User | null>(null);
     const [chatMessages, setChatMessages] = useState<Record<number, { fromUserId: number; content: string; sentAt: string }[]>>({});
     const [chatInput, setChatInput]       = useState("");
+
+    // Carousel state for mobile/tablet
+    const isMobile = useIsMobile();
+    const [carouselIndex, setCarouselIndex] = useState(0);
+    const [dragOffset, setDragOffset] = useState(0);
+    const [isDragging, setIsDragging] = useState(false);
+    const carouselRef = useRef<HTMLDivElement>(null);
+    const touchStartRef = useRef<{ x: number; y: number } | null>(null);
 
     // Social hook
     const {
@@ -169,6 +178,48 @@ export default function Home() {
             setOnlinePlayers(users.filter((u) => u.id !== player1?.id));
         }, [player1]),
     });
+
+    // ── Carousel drag handlers ────────────────────────────────────────────
+    const handleTouchStart = (e: React.TouchEvent) => {
+        // Solo si tenemos el carrusel ref, iniciamos el drag
+        if (!carouselRef.current || e.touches.length !== 1) return;
+        
+        setIsDragging(true);
+        touchStartRef.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+    };
+
+    const handleTouchMove = (e: React.TouchEvent) => {
+        if (!isDragging || !touchStartRef.current || e.touches.length !== 1) return;
+
+        const currentX = e.touches[0].clientX;
+        const deltaX = touchStartRef.current.x - currentX;
+        
+        // Permitir drag suave hasta el siguiente/anterior índice
+        // dragOffset es negativo para swipe left (siguiente), positivo para swipe right (anterior)
+        setDragOffset(-deltaX);
+    };
+
+    const handleTouchEnd = (e: React.TouchEvent) => {
+        if (!isDragging || !touchStartRef.current) return;
+        
+        const touchEnd = { x: e.changedTouches[0].clientX, y: e.changedTouches[0].clientY };
+        const deltaX = touchStartRef.current.x - touchEnd.x;
+        const minSwipeDistance = window.innerWidth * 0.3; // 30% threshold
+
+        if (Math.abs(deltaX) > minSwipeDistance) {
+            if (deltaX > 0) {
+                // Swipe left - next column
+                setCarouselIndex((prev) => Math.min(prev + 1, 2));
+            } else {
+                // Swipe right - previous column
+                setCarouselIndex((prev) => Math.max(prev - 1, 0));
+            }
+        }
+
+        setDragOffset(0);
+        setIsDragging(false);
+        touchStartRef.current = null;
+    };
 
     // ── Auth ──────────────────────────────────────────────────────────────
     const handleLogin = async (email: string, password: string) => {
@@ -354,69 +405,152 @@ export default function Home() {
                 background: theme.background, fontFamily: "'Courier New', monospace",
                 boxSizing: "border-box", padding: 20, gap: 16,
             }}>
-                {/* Main row */}
-                <div style={{ display: "flex", flex: 1, gap: 16, minHeight: 0 }}>
-                    <ProfilePanel
-                        player1={player1}
-                        selectedProfile={selectedProfile}
-                        onClearProfile={() => setSelectedProfile(null)}
-                        onLogout={handleLogout}
-                        onUpdateProfile={updateProfile}
-                        onUploadAvatar={uploadAvatar}
-                    />
-                    <GameCenter
-                        player1={player1}
-                        player2={player2}
-                        isOnlineGame={isOnlineGame}
-                        onlineRoomId={onlineRoomId}
-                        onlineGameId={onlineGameId}
-                        onlinePlayer1Id={onlinePlayer1Id}
-                        invitationSent={invitationSent}
-                        socket={socketRef.current}
-                        onStartLocal={startLocalGame}
-                        onOpenMultiModal={() => setShowMultiModal(true)}
-                        onExitGame={handleExitGame}
-                        onStartAI={startAIGame}
-                        isAIGame={isAIGame}
-                        aiDifficulty={aiDifficulty}
-                        onGameEnd={handleGameEnd}
-                    />
-                    {/* Right column */}
-                    <div style={{ flex: "0 0 24%", display: "flex", flexDirection: "column", gap: 16 }}>
-                        <PlayerList
-                            users={onlinePlayers.filter((u) => u.id !== player1.id)}
-                            friendStatus={friendStatus}
-                            pendingGames={pendingGamesByUser}
-                            onSendRequest={sendRequest}
+                {/* Main row - Desktop layout or Carousel for mobile/tablet */}
+                {isMobile ? (
+                    // MOBILE/TABLET: Carousel layout
+                    <div
+                        ref={carouselRef}
+                        className="carousel-container"
+                        onTouchStart={handleTouchStart}
+                        onTouchMove={handleTouchMove}
+                        onTouchEnd={handleTouchEnd}
+                        style={{ flex: 1, minHeight: 0 }}
+                    >
+                        <div
+                            className={`carousel-inner${isDragging ? ' dragging' : ''}`}
+                            style={{
+                                transform: `translateX(calc(-${carouselIndex} * 100vw + ${dragOffset}px))`,
+                            }}
+                        >
+                            {/* Column 1: Profile Panel */}
+                            <div className="carousel-column" style={{ flex: "0 0 100vw" }}>
+                                <ProfilePanel
+                                    player1={player1}
+                                    selectedProfile={selectedProfile}
+                                    onClearProfile={() => setSelectedProfile(null)}
+                                    onLogout={handleLogout}
+                                    onUpdateProfile={updateProfile}
+                                    onUploadAvatar={uploadAvatar}
+                                />
+                            </div>
 
-                            onReconnectGame={handleReconnectGame}
-                            onLoadProfile={handleLoadProfile}
-                        />
-                        <FriendsPanel
-                            friends={friends}
-                            requests={requests}
-                            onlineFriends={onlineFriends}
-                            pendingGames={pendingGamesByUser}
-                            onAcceptRequest={acceptRequest}
-                            onRemoveFriend={removeFriend}
-                            onReconnectGame={handleReconnectGame}
-                            onOpenChat={setChatWith}
-                            onLoadProfile={handleLoadProfile}
-                        />
+                            {/* Column 2: Game Center */}
+                            <div className="carousel-column" style={{ flex: "0 0 100vw" }}>
+                                <GameCenter
+                                    player1={player1}
+                                    player2={player2}
+                                    isOnlineGame={isOnlineGame}
+                                    onlineRoomId={onlineRoomId}
+                                    onlineGameId={onlineGameId}
+                                    onlinePlayer1Id={onlinePlayer1Id}
+                                    invitationSent={invitationSent}
+                                    socket={socketRef.current}
+                                    onStartLocal={startLocalGame}
+                                    onOpenMultiModal={() => setShowMultiModal(true)}
+                                    onExitGame={handleExitGame}
+                                    onStartAI={startAIGame}
+                                    isAIGame={isAIGame}
+                                    aiDifficulty={aiDifficulty}
+                                    onGameEnd={handleGameEnd}
+                                />
+                            </div>
+
+                            {/* Column 3: Player List & Friends */}
+                            <div className="carousel-column" style={{ flex: "0 0 100vw" }}>
+                                <div style={{ display: "flex", flexDirection: "column", gap: 16, flex: 1, minHeight: 0 }}>
+                                    <PlayerList
+                                        users={onlinePlayers.filter((u) => u.id !== player1.id)}
+                                        friendStatus={friendStatus}
+                                        pendingGames={pendingGamesByUser}
+                                        onSendRequest={sendRequest}
+                                        onReconnectGame={handleReconnectGame}
+                                        onLoadProfile={handleLoadProfile}
+                                    />
+                                    <FriendsPanel
+                                        friends={friends}
+                                        requests={requests}
+                                        onlineFriends={onlineFriends}
+                                        pendingGames={pendingGamesByUser}
+                                        onAcceptRequest={acceptRequest}
+                                        onRemoveFriend={removeFriend}
+                                        onReconnectGame={handleReconnectGame}
+                                        onOpenChat={setChatWith}
+                                        onLoadProfile={handleLoadProfile}
+                                    />
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                </div>
+                ) : (
+                    // DESKTOP: Original 3-column layout
+                    <div style={{ display: "flex", flex: 1, gap: 16, minHeight: 0 }}>
+                        <ProfilePanel
+                            player1={player1}
+                            selectedProfile={selectedProfile}
+                            onClearProfile={() => setSelectedProfile(null)}
+                            onLogout={handleLogout}
+                            onUpdateProfile={updateProfile}
+                            onUploadAvatar={uploadAvatar}
+                        />
+                        <GameCenter
+                            player1={player1}
+                            player2={player2}
+                            isOnlineGame={isOnlineGame}
+                            onlineRoomId={onlineRoomId}
+                            onlineGameId={onlineGameId}
+                            onlinePlayer1Id={onlinePlayer1Id}
+                            invitationSent={invitationSent}
+                            socket={socketRef.current}
+                            onStartLocal={startLocalGame}
+                            onOpenMultiModal={() => setShowMultiModal(true)}
+                            onExitGame={handleExitGame}
+                            onStartAI={startAIGame}
+                            isAIGame={isAIGame}
+                            aiDifficulty={aiDifficulty}
+                            onGameEnd={handleGameEnd}
+                        />
+                        {/* Right column */}
+                        <div style={{ flex: "0 0 24%", display: "flex", flexDirection: "column", gap: 16 }}>
+                            <PlayerList
+                                users={onlinePlayers.filter((u) => u.id !== player1.id)}
+                                friendStatus={friendStatus}
+                                pendingGames={pendingGamesByUser}
+                                onSendRequest={sendRequest}
+
+                                onReconnectGame={handleReconnectGame}
+                                onLoadProfile={handleLoadProfile}
+                            />
+                            <FriendsPanel
+                                friends={friends}
+                                requests={requests}
+                                onlineFriends={onlineFriends}
+                                pendingGames={pendingGamesByUser}
+                                onAcceptRequest={acceptRequest}
+                                onRemoveFriend={removeFriend}
+                                onReconnectGame={handleReconnectGame}
+                                onOpenChat={setChatWith}
+                                onLoadProfile={handleLoadProfile}
+                            />
+                        </div>
+                    </div>
+                )}
 
                 {/* Bottom bar */}
                 <div style={{
                     background: theme.surface, border: `1px solid ${theme.border}`, borderRadius: 8,
-                    padding: "12px 32px", display: "flex", alignItems: "center", justifyContent: "space-between",
+                    padding: isMobile ? "8px 12px" : "12px 32px", 
+                    display: "flex", 
+                    alignItems: "center", 
+                    justifyContent: isMobile ? "center" : "space-between",
+                    flexWrap: isMobile ? "wrap" : "nowrap",
+                    gap: isMobile ? 8 : 16,
                 }}>
-                    <h1 style={{ margin: 0, fontSize: 22, fontWeight: "bold", letterSpacing: 6, color: theme.text }}>
+                    <h1 style={{ margin: 0, fontSize: isMobile ? 14 : 22, fontWeight: "bold", letterSpacing: isMobile ? 2 : 6, color: theme.text, order: isMobile ? 1 : 0 }}>
                         FT TRANSCENDENCE
                     </h1>
 
- 					{/* Selector de temas */}
-                    <div style={{ display: "flex", gap: 8 }}>
+  					{/* Selector de temas */}
+                    <div style={{ display: "flex", gap: 4, order: isMobile ? 3 : 1, flexBasis: isMobile ? "100%" : "auto", justifyContent: isMobile ? "center" : "flex-start" }}>
                         {themeOptions.map(({ key, label }) => (
                             <button
                                 key={key}
@@ -427,16 +561,17 @@ export default function Home() {
                                     color: themeName === key ? theme.text : theme.textDim,
                                     fontWeight: themeName === key ? "bold" : "normal",
                                     letterSpacing: 1,
-                                    padding: "4px 12px",
+                                    padding: isMobile ? "2px 6px" : "4px 12px",
+                                    fontSize: isMobile ? 10 : 12,
                                 }}
                             >
-                                {label}
+                                {isMobile ? label.charAt(0) : label}
                             </button>
                         ))}
                     </div>
 
                     {/* Legal links */}
-                    <div style={{ display: "flex", gap: 16 }}>
+                    <div style={{ display: isMobile ? "none" : "flex", gap: 16, order: 2 }}>
                         <a
                             href="/privacy-policy" target="_blank"
                             style={{ fontSize: 10, color: theme.textDim, letterSpacing: 1,

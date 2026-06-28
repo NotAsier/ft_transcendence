@@ -108,3 +108,57 @@ code {
   padding: 4px 8px;
   background: var(--code-bg);
 }
+
+/* ====== BREAKPOINTS ====== */
+/* Mobile: < 640px */
+/* Tablet: 640px - 1024px */
+/* Desktop: >= 1025px */
+
+/* ====== CAROUSEL STYLES FOR MOBILE/TABLET ====== */
+@media (max-width: 1024px) {
+  .carousel-container {
+    display: flex;
+    overflow: hidden;
+    scroll-snap-type: x mandatory;
+    position: relative;
+    width: 100%;
+    height: 100%;
+  }
+
+  .carousel-column {
+    flex: 0 0 100vw;
+    min-width: 100vw;
+    scroll-snap-align: start;
+    overflow-y: auto;
+    overflow-x: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .carousel-inner {
+    display: flex;
+    width: 100%;
+    height: 100%;
+    transition: transform 350ms ease-out;
+  }
+
+  .carousel-inner.dragging {
+    transition: none;
+  }
+}
+
+/* Desktop: keep original layout */
+@media (min-width: 1025px) {
+  .carousel-container {
+    display: contents;
+  }
+
+  .carousel-column {
+    display: flex !important;
+    flex-direction: column;
+  }
+
+  .carousel-inner {
+    display: contents;
+  }
+}
