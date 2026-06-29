@@ -6,9 +6,19 @@ export default defineConfig({
   server: {
     host: '0.0.0.0',
     port: 5173,
-    hmr: {
-      clientPort: 443,
-      protocol: 'wss',
+    proxy: {
+      '/api': {
+        target: 'http://backend:3000',
+        changeOrigin: true,
+      },
+      '/socket.io': {
+        target: 'http://backend:3000',
+        ws: true,
+      },
+      '/uploads': {
+        target: 'http://backend:3000',
+        changeOrigin: true,
+      },
     },
   },
 })
