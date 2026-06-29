@@ -1,0 +1,158 @@
+ Service backend  Building
+#0 building with "default" instance using docker driver
+
+#1 [backend internal] load build definition from Dockerfile
+#1 transferring dockerfile:
+#1 transferring dockerfile: 373B 0.1s done
+#1 DONE 0.2s
+
+#2 [backend internal] load metadata for docker.io/library/node:20
+#2 DONE 1.2s
+
+#3 [backend internal] load .dockerignore
+#3 transferring context: 2B done
+#3 DONE 0.2s
+
+#4 [backend internal] load build context
+#4 DONE 0.0s
+
+#5 [backend 1/6] FROM docker.io/library/node:20@sha256:8f693eaa7e0a8e71560c9a82b55fd54c2ae920a2ba5d2cde28bac7d1c01c9ba5
+#5 DONE 0.0s
+
+#6 [backend 2/6] WORKDIR /app
+#6 CACHED
+
+#4 [backend internal] load build context
+#4 transferring context: 10.80kB 0.0s done
+#4 DONE 0.3s
+
+#7 [backend 3/6] COPY package*.json ./
+#7 DONE 1.3s
+
+#8 [backend 4/6] RUN npm install
+#8 5.304 npm warn deprecated rimraf@2.7.1: Rimraf versions prior to v4 are no longer supported
+#8 5.943 npm warn deprecated inflight@1.0.6: This module is not supported, and leaks memory. Do not use it. Check out lru-cache if you want a good and tested way to coalesce async requests by a key value, which is much more comprehensive and powerful.
+#8 6.480 npm warn deprecated @types/winston@2.4.4: This is a stub types definition. winston provides its own type definitions, so you do not need this installed.
+#8 7.520 npm warn deprecated glob@7.2.3: Old versions of glob are not supported, and contain widely publicized security vulnerabilities, which have been fixed in the current version. Please update. Support for old versions may be purchased (at exorbitant rates) by contacting i@izs.me
+#8 7.581 npm warn deprecated glob@7.2.3: Old versions of glob are not supported, and contain widely publicized security vulnerabilities, which have been fixed in the current version. Please update. Support for old versions may be purchased (at exorbitant rates) by contacting i@izs.me
+#8 8.183 npm warn deprecated glob@10.5.0: Old versions of glob are not supported, and contain widely publicized security vulnerabilities, which have been fixed in the current version. Please update. Support for old versions may be purchased (at exorbitant rates) by contacting i@izs.me
+#8 8.198 npm warn deprecated glob@10.5.0: Old versions of glob are not supported, and contain widely publicized security vulnerabilities, which have been fixed in the current version. Please update. Support for old versions may be purchased (at exorbitant rates) by contacting i@izs.me
+#8 8.243 npm warn deprecated glob@10.5.0: Old versions of glob are not supported, and contain widely publicized security vulnerabilities, which have been fixed in the current version. Please update. Support for old versions may be purchased (at exorbitant rates) by contacting i@izs.me
+#8 28.51 
+#8 28.51 added 850 packages, and audited 851 packages in 26s
+#8 28.51 
+#8 28.51 162 packages are looking for funding
+#8 28.51   run `npm fund` for details
+#8 28.56 
+#8 28.56 28 vulnerabilities (18 moderate, 10 high)
+#8 28.56 
+#8 28.56 To address issues that do not require attention, run:
+#8 28.56   npm audit fix
+#8 28.56 
+#8 28.56 To address all issues (including breaking changes), run:
+#8 28.56   npm audit fix --force
+#8 28.56 
+#8 28.56 Run `npm audit` for details.
+#8 28.56 npm notice
+#8 28.56 npm notice New major version of npm available! 10.8.2 -> 11.17.0
+#8 28.56 npm notice Changelog: https://github.com/npm/cli/releases/tag/v11.17.0
+#8 28.56 npm notice To update run: npm install -g npm@11.17.0
+#8 28.56 npm notice
+#8 DONE 30.4s
+
+#9 [backend 5/6] COPY . .
+#9 DONE 2.0s
+
+#10 [backend 6/6] RUN if [ "development" = "production" ]; then npm run build; fi
+#10 DONE 4.8s
+
+#11 [backend] exporting to image
+#11 exporting layers
+#11 exporting layers 60.6s done
+#11 writing image sha256:a7447a97bb78c758ca1699807d3bffff166bffa8df14e6fd91cea228e5e794eb 0.1s done
+#11 naming to docker.io/library/trans-backend
+#11 naming to docker.io/library/trans-backend 0.1s done
+#11 DONE 61.4s
+
+#12 [backend] resolving provenance for metadata file
+ Service backend  Built
+ Service frontend  Building
+#12 DONE 0.2s
+
+#13 [frontend internal] load build definition from Dockerfile
+#13 transferring dockerfile:
+#13 transferring dockerfile: 357B 0.1s done
+#13 DONE 0.4s
+
+#2 [frontend internal] load metadata for docker.io/library/node:20
+#2 DONE 2.5s
+
+#14 [frontend internal] load .dockerignore
+#14 transferring context: 2B done
+#14 DONE 0.2s
+
+#5 [frontend 1/7] FROM docker.io/library/node:20@sha256:8f693eaa7e0a8e71560c9a82b55fd54c2ae920a2ba5d2cde28bac7d1c01c9ba5
+#5 DONE 0.0s
+
+#6 [frontend 2/7] WORKDIR /app
+#6 CACHED
+
+#15 [frontend internal] load build context
+#15 transferring context: 2.00kB done
+#15 DONE 0.2s
+
+#16 [frontend 3/7] COPY package*.json ./
+#16 DONE 0.9s
+
+#17 [frontend 4/7] RUN npm install
+#17 5.458 
+#17 5.458 added 192 packages, and audited 193 packages in 4s
+#17 5.458 
+#17 5.458 52 packages are looking for funding
+#17 5.458   run `npm fund` for details
+#17 5.463 
+#17 5.463 2 high severity vulnerabilities
+#17 5.463 
+#17 5.463 To address all issues, run:
+#17 5.463   npm audit fix
+#17 5.463 
+#17 5.463 Run `npm audit` for details.
+#17 5.464 npm notice
+#17 5.464 npm notice New major version of npm available! 10.8.2 -> 11.17.0
+#17 5.464 npm notice Changelog: https://github.com/npm/cli/releases/tag/v11.17.0
+#17 5.464 npm notice To update run: npm install -g npm@11.17.0
+#17 5.464 npm notice
+#17 DONE 9.5s
+
+#18 [frontend 5/7] COPY . .
+#18 DONE 0.9s
+
+#19 [frontend 6/7] RUN npm run build
+#19 1.490 
+#19 1.490 > frontend@0.0.0 build
+#19 1.490 > tsc -b && vite build
+#19 1.490 
+#19 3.957 vite v8.0.16 building client environment for production...
+#19 4.000 [2Ktransforming...✓ 378 modules transformed.
+#19 4.739 rendering chunks...
+#19 4.850 computing gzip size...
+#19 4.856 dist/index.html                   0.45 kB │ gzip:   0.29 kB
+#19 4.856 dist/assets/index-D_c25IRH.css   27.28 kB │ gzip:   4.50 kB
+#19 4.856 dist/assets/index-DHs7NTgN.js   406.06 kB │ gzip: 117.23 kB
+#19 4.856 
+#19 4.856 ✓ built in 898ms
+#19 DONE 6.0s
+
+#20 [frontend 7/7] RUN if [ "development" = "production" ]; then npm run build; fi
+#20 DONE 1.9s
+
+#21 [frontend] exporting to image
+#21 exporting layers
+#21 exporting layers 20.4s done
+#21 writing image sha256:cf990508caf39f7413ec293152d0fb17c4102da364594d468a85f9d35e88f04d 0.0s done
+#21 naming to docker.io/library/trans-frontend 0.1s done
+#21 DONE 20.8s
+
+#22 [frontend] resolving provenance for metadata file
+ Service frontend  Built
+#22 DONE 0.0s
