@@ -541,16 +541,16 @@ export default function Home() {
                     padding: isMobile ? "8px 12px" : "12px 32px", 
                     display: "flex", 
                     alignItems: "center", 
-                    justifyContent: isMobile ? "center" : "space-between",
+                    justifyContent: "space-between",
                     flexWrap: isMobile ? "wrap" : "nowrap",
                     gap: isMobile ? 8 : 16,
                 }}>
-                    <h1 style={{ margin: 0, fontSize: isMobile ? 14 : 22, fontWeight: "bold", letterSpacing: isMobile ? 2 : 6, color: theme.text, order: isMobile ? 1 : 0 }}>
+                    <h1 style={{ margin: 0, fontSize: isMobile ? 14 : 22, fontWeight: "bold", letterSpacing: isMobile ? 2 : 6, color: theme.text, order: isMobile ? 1 : 0, flexBasis: isMobile ? "100%" : "auto" }}>
                         FT TRANSCENDENCE
                     </h1>
 
   					{/* Selector de temas */}
-                    <div style={{ display: "flex", gap: 4, order: isMobile ? 3 : 1, flexBasis: isMobile ? "100%" : "auto", justifyContent: isMobile ? "center" : "flex-start" }}>
+                    <div style={{ display: "flex", gap: 4,                             order: isMobile ? 3 : 1, flex: isMobile ? 1 : undefined, justifyContent: "center" }}>
                         {themeOptions.map(({ key, label }) => (
                             <button
                                 key={key}
@@ -571,26 +571,28 @@ export default function Home() {
                     </div>
 
                     {/* Legal links */}
-                    <div style={{ display: isMobile ? "none" : "flex", gap: 16, order: 2 }}>
-                        <a
-                            href="/privacy-policy" target="_blank"
-                            style={{ fontSize: 10, color: theme.textDim, letterSpacing: 1,
-                                textDecoration: "none", opacity: 0.6 }}
-                            onMouseEnter={e => (e.currentTarget.style.opacity = "1")}
-                            onMouseLeave={e => (e.currentTarget.style.opacity = "0.6")}
-                        >
-                            PRIVACY POLICY
-                        </a>
-                        <a
-                            href="/terms-of-service" target="_blank"
-                            style={{ fontSize: 10, color: theme.textDim, letterSpacing: 1,
-                                textDecoration: "none", opacity: 0.6 }}
-                            onMouseEnter={e => (e.currentTarget.style.opacity = "1")}
-                            onMouseLeave={e => (e.currentTarget.style.opacity = "0.6")}
-                        >
-                            TERMS OF SERVICE
-                        </a>
-                    </div>
+                    <a
+                        href="/privacy-policy" target="_blank"
+                        style={{ fontSize: 10, color: theme.textDim, letterSpacing: 1,
+                            textDecoration: "none", opacity: 0.6,
+                            order: isMobile ? 2 : 2, flex: isMobile ? 1 : undefined,
+                            display: "flex", justifyContent: "flex-start" }}
+                        onMouseEnter={e => (e.currentTarget.style.opacity = "1")}
+                        onMouseLeave={e => (e.currentTarget.style.opacity = "0.6")}
+                    >
+                        PRIVACY POLICY
+                    </a>
+                    <a
+                        href="/terms-of-service" target="_blank"
+                        style={{ fontSize: 10, color: theme.textDim, letterSpacing: 1,
+                            textDecoration: "none", opacity: 0.6,
+                            order: isMobile ? 4 : 2, flex: isMobile ? 1 : undefined,
+                            display: "flex", justifyContent: "flex-end" }}
+                        onMouseEnter={e => (e.currentTarget.style.opacity = "1")}
+                        onMouseLeave={e => (e.currentTarget.style.opacity = "0.6")}
+                    >
+                        TERMS OF SERVICE
+                    </a>
 
                     </div>
 
