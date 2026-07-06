@@ -28,8 +28,8 @@ services:
       - "3000:3000"
       - "5555:5555"
     depends_on:
-      - db:
-          condition: service_healthy
+      db:
+        condition: service_healthy
     volumes:
       - ./backend:/app
       - /app/node_modules
