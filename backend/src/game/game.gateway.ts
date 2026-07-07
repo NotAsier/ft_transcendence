@@ -11,6 +11,7 @@ import { Server, Socket } from 'socket.io';
 import { JwtService } from '@nestjs/jwt';
 import { GameService } from './game.service';
 import { PrismaService } from '../prisma/prisma.service';
+import { UserMetrics } from '../user/user.metrics';
 
 /**
  * SINGLE unified gateway on port 3001 (or the same port as the app if you
@@ -35,6 +36,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
         private jwtService: JwtService,
         private gameService: GameService,
         private prisma: PrismaService,
+        private userMetrics: UserMetrics,
     ) {}
 
     // ── Lifecycle ──────────────────────────────────────────────────────────────
@@ -52,6 +54,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
             this.connectedUsers.set(payload.sub, client.id);
             console.log(`[Game] Usuario ${payload.sub} conectado (${client.id})`);
             this.server.emit('user_connected', { userId: payload.sub });
+            this.userMetrics.trackOnline(payload.sub);
 
             // Send snapshot of currently online users to the newly connected client
             this.sendOnlineUsersSnapshot(client, payload.sub);
@@ -79,6 +82,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
             this.connectedUsers.delete(userId);
             console.log(`[Game] Usuario ${userId} desconectado`);
             this.server.emit('user_disconnected', { userId });
+            this.userMetrics.untrackOnline(userId);
         }
     }
 

@@ -10,6 +10,7 @@ import {
   import { Server, Socket } from 'socket.io';
   import { ChatService } from './chat.service';
   import { ChatMetrics } from './chat.metrics';
+  import { UserMetrics } from '../user/user.metrics';
   
   @WebSocketGateway({
     cors: { origin: '*' },
@@ -24,6 +25,7 @@ import {
     constructor(
       private readonly chatService: ChatService,
       private readonly metrics: ChatMetrics,
+      private readonly userMetrics: UserMetrics,
     ) {}
   
     // ─────────────────────────────
@@ -45,6 +47,7 @@ import {
       for (const [userId, socketId] of this.userSockets.entries()) {
         if (socketId === client.id) {
           this.userSockets.delete(userId);
+          this.userMetrics.untrackOnline(userId);
           break;
         }
       }

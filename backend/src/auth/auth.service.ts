@@ -79,7 +79,6 @@ export class AuthService {
     if (!valid) throw new UnauthorizedException('Credenciales incorrectas');
 
     this.userMetrcs.incLogin();
-    this.userMetrcs.incOnline();
 
     return this.signToken(user.id, user.email);
  

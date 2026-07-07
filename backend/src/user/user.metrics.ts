@@ -22,7 +22,7 @@ export class UserMetrics {
     registers: [register],
   });
 
-  private onlineCount = 0;
+  private onlineUsers = new Set<number>();
 
   incCreated() {
     this.usersCreated.inc();
@@ -32,19 +32,13 @@ export class UserMetrics {
     this.userLogins.inc();
   }
 
-  incOnline() {
-    this.onlineCount++;
-    this.usersOnline.set(this.onlineCount);
+  trackOnline(userId: number) {
+    this.onlineUsers.add(userId);
+    this.usersOnline.set(this.onlineUsers.size);
   }
 
-  decOnline() {
-    this.onlineCount--;
-    if (this.onlineCount < 0) this.onlineCount = 0;
-    this.usersOnline.set(this.onlineCount);
-  }
-
-  setOnline(value: number) {
-    this.onlineCount = value;
-    this.usersOnline.set(value);
+  untrackOnline(userId: number) {
+    this.onlineUsers.delete(userId);
+    this.usersOnline.set(this.onlineUsers.size);
   }
 }

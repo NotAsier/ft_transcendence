@@ -5,6 +5,7 @@ import { GameService } from './game.service';
 import { GameGateway } from './game.gateway';
 import { PrismaService } from '../prisma/prisma.service';
 import { GameMetrics } from './game.metrics';
+import { UserModule } from '../user/user.module';
 
 @Module({
   imports: [
@@ -14,6 +15,7 @@ import { GameMetrics } from './game.metrics';
         signOptions: { expiresIn: '7d' },
       }),
     }),
+    UserModule,
   ],
   controllers: [GameController],
   providers: [GameService, GameGateway, PrismaService, GameMetrics],
