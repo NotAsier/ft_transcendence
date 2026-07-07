@@ -21,6 +21,10 @@ export class AuthService {
     country?: string,
     gender?: string,
   ) {
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))
+    throw new BadRequestException('El email no tiene un formato válido');
+
+
     const emailExists = await this.prisma.user.findUnique({ where: { email } });
     if (emailExists) throw new ConflictException('Email ya registrado');
 
@@ -55,7 +59,17 @@ export class AuthService {
     return this.signToken(user.id, user.email);
   }
 
+  private validateGmailDomain(email: string): void {
+  if (!email.endsWith('@gmail.com')) {
+    throw new BadRequestException('Solo se permiten emails con dominio @gmail.com');
+  }
+}
+
   async login(email: string, password: string) {
+
+	if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))
+    throw new BadRequestException('El email no tiene un formato válido');
+
     const user = await this.prisma.user.findUnique({ where: { email } });
     if (!user) throw new UnauthorizedException('Credenciales incorrectas');
 

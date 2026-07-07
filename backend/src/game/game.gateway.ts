@@ -43,9 +43,6 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
         try {
             const token = client.handshake.auth?.token;
             if (!token) {
-                // Allow connection without token; userId will be set via
-                // 'register' event (used by chat). Game moves require userId,
-                // so unauthenticated clients simply can't make moves.
                 return;
             }
             const payload = this.jwtService.verify(token, {
