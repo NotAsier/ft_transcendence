@@ -83,6 +83,13 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
             console.log(`[Game] Usuario ${userId} desconectado`);
             this.server.emit('user_disconnected', { userId });
             this.userMetrics.untrackOnline(userId);
+
+            const affectedRooms = await this.gameService.abandonGamesForUser(userId);
+            for (const roomId of affectedRooms) {
+                this.server.to(roomId).emit('game_over', {
+                    winner: 'opponent',
+                    reason: 'disconnect',
+                });
         }
     }
 

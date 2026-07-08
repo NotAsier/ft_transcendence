@@ -22,6 +22,12 @@ export class GameMetrics {
     registers: [register],
   });
 
+  private readonly gamesAbandoned = new Counter({
+    name: 'games_abandoned_total',
+    help: 'Total games abandoned by disconnect',
+    registers: [register],
+  });
+
   private readonly moves = new Counter({
     name: 'game_moves_total',
     help: 'Total moves made',
@@ -51,6 +57,10 @@ export class GameMetrics {
 
   incFinished() {
     this.gamesFinished.inc();
+  }
+
+  incAbandoned() {
+    this.gamesAbandoned.inc();
   }
 
   incMove() {

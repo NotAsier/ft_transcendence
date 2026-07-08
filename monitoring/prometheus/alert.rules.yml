@@ -1,0 +1,38 @@
+groups:
+  - name: ft_transcendence_alerts
+    rules:
+      - alert: BackendDown
+        expr: up{job="backend"} == 0
+        for: 30s
+        labels:
+          severity: critical
+        annotations:
+          summary: "Backend caído"
+          description: "El backend lleva más de 30s sin responder al scrape de Prometheus."
+
+      - alert: HighMoveLatency
+        expr: histogram_quantile(0.95, rate(game_move_latency_seconds_bucket[5m])) > 1
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Latencia alta en movimientos de juego"
+          description: "El percentil 95 de latencia de moves supera 1s en los últimos 5 minutos."
+
+      - alert: NoActiveUsers
+        expr: users_online == 0
+        for: 10m
+        labels:
+          severity: info
+        annotations:
+          summary: "Sin usuarios conectados"
+          description: "No hay usuarios online desde hace 10 minutos."
+
+      - alert: HighAbandonRate
+        expr: increase(games_abandoned_total[10m]) > 5
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Muchas partidas abandonadas"
+          description: "Más de 5 partidas abandonadas en los últimos 10 minutos."

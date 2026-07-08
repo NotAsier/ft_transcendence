@@ -46,9 +46,48 @@ export class GameService {
         });
 
         this.metrics.incStarted();
+        const active = await this.prisma.match.count({ where: { status: 'playing' } });
+        this.metrics.setActive(active);
 
         return updated;
     }
+
+    async abandonGamesForUser(userId: number) {
+    const activeMatches = await this.prisma.match.findMany({
+        where: {
+            status: 'playing',
+            OR: [{ player1Id: userId }, { player2Id: userId }],
+        },
+    });
+
+    for (const match of activeMatches) {
+        const winner =
+            match.player1Id === userId ? 'player2' : 'player1';
+
+        await this.prisma.match.update({
+            where: { id: match.id },
+            data: {
+                status: 'finished',
+                winner,
+                finishedAt: new Date(),
+            },
+        });
+
+        this.metrics.incAbandoned();
+    }
+
+    await this.prisma.match.deleteMany({
+        where: {
+            status: 'waiting',
+            player1Id: userId,
+        },
+    });
+
+    const active = await this.prisma.match.count({ where: { status: 'playing' } });
+    this.metrics.setActive(active);
+
+    return activeMatches.map((m) => `game_${m.id}`); // roomIds afectados, para notificar al rival
+}
 
     async getGameState(gameId: number) {
         const game = await this.prisma.match.findUnique({
@@ -64,8 +103,8 @@ export class GameService {
     }
 
     async makeMove(gameId: number, playerId: number, position: number) {
-        this.metrics.incMove();
 
+        const start = Date.now();
         const game = await this.prisma.match.findUnique({ where: { id: gameId } });
 
         if (!game) throw new NotFoundException('Partida no encontrada');
@@ -108,6 +147,9 @@ export class GameService {
                 score2: hasWinner && !isP1Turn ? { increment: 1 } : undefined,
             },
         });
+
+        this.metrics.incMove();
+        this.metrics.observeMoveLatency((Date.now() - start / 1000));
 
         if (isFinished) {
             this.metrics.incFinished();
