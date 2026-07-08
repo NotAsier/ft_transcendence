@@ -27,7 +27,7 @@ import { UserMetrics } from '../user/user.metrics';
 @WebSocketGateway({ cors: { origin: '*' } })
 export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
     @WebSocketServer()
-    server: Server;
+    server!: Server;
 
     /** userId → socketId */
     private connectedUsers = new Map<number, string>();
@@ -76,7 +76,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
         }
     }
 
-    handleDisconnect(client: Socket) {
+   async handleDisconnect(client: Socket) {
         const userId = client.data.userId as number | undefined;
         if (userId) {
             this.connectedUsers.delete(userId);
@@ -90,6 +90,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
                     winner: 'opponent',
                     reason: 'disconnect',
                 });
+            }
         }
     }
 
