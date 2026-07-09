@@ -115,8 +115,8 @@ All AI-generated code was reviewed, tested, and understood by the team before be
 | Member | Role | Responsibilities |
 |--------|------|-----------------|
 | aarranz- | Developer | Online multiplayer (WebSocket game gateway), chat system (WebSocket gateway, direct messages), friends system, user profiles, match history, reconnection, Kibana dashboards, Grafana provisioning |
-| ciestrad | Developer | Authentication system (JWT + Google OAuth), frontend components, theming system, Nginx/SSL configuration |
-| izperez | Developer | DevOps infrastructure (Docker, ELK stack, Prometheus, Grafana), monitoring/metrics system, logging, user profiles |
+| ciestrad | Developer | Authentication system (JWT + Google OAuth), frontend components, theming system, Nginx/SSL configuration, , logging, user profiles |
+| izperez | Developer | DevOps infrastructure (Docker, ELK stack, Prometheus, Grafana), monitoring/metrics system, profile editor|
 | aszamora | Developer | Tic-Tac-Toe core game logic, AI opponent (minimax), leaderboard, responsive UI, Prisma schema, Privacy Policy & Terms of Service |
 
 ## Project Management
@@ -303,7 +303,7 @@ Unique constraint: (fromUserId, toUserId)
 | Feature | Description | Implemented by |
 |---------|-------------|----------------|
 | Theme System | 4 switchable themes: Dark, Light, Retro, Lila | ciestrad |
-| Responsive Design | Mobile-first with swipeable carousel layout | aszamora |
+| Responsive Design | Mobile-first with swipeable carousel layout | aarranz- |
 | Invitation Toasts | Real-time notifications for incoming game invites | ciestrad |
 | Privacy Policy | Legal page accessible from footer | aszamora |
 | Terms of Service | Legal page accessible from footer | aszamora |
