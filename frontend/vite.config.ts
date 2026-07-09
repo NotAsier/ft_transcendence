@@ -8,7 +8,7 @@ export default defineConfig({
     port: 5173,
     allowedHosts: ['localhost', 'frontend'],
     hmr: {
-      clientPort: 443,
+      clientPort: 8443,
       protocol: 'wss',
     },
     proxy: {
