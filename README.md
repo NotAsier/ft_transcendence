@@ -114,10 +114,10 @@ All AI-generated code was reviewed, tested, and understood by the team before be
 
 | Member | Role | Responsibilities |
 |--------|------|-----------------|
-| aarranz- | Developer | Game logic, WebSocket gateways (game + chat), friends system, responsive UI, multiplayer reconnection, Kibana dashboards |
+| aarranz- | Developer | Online multiplayer (WebSocket game gateway), chat system (WebSocket gateway, direct messages), friends system, user profiles, match history, reconnection, Kibana dashboards, Grafana provisioning |
 | ciestrad | Developer | Authentication system (JWT + Google OAuth), frontend components, theming system, Nginx/SSL configuration |
 | izperez | Developer | DevOps infrastructure (Docker, ELK stack, Prometheus, Grafana), monitoring/metrics system, logging, user profiles |
-| aszamora | Developer | Database schema design (Prisma), Privacy Policy & Terms of Service pages, Dockerfile optimization |
+| aszamora | Developer | Tic-Tac-Toe core game logic, AI opponent (minimax), leaderboard, responsive UI, Prisma schema, Privacy Policy & Terms of Service |
 
 ## Project Management
 
@@ -125,7 +125,7 @@ All AI-generated code was reviewed, tested, and understood by the team before be
 
 The team organized work using an informal Scrum-like approach with the following practices:
 
-- **Task distribution**: Tasks were divided based on each member's strengths and availability. aarranz- focused on game logic and real-time features, ciestrad on authentication and UI, izperez on DevOps and monitoring, and aszamora on database design and legal pages.
+- **Task distribution**: Tasks were divided based on each member's strengths and availability. aarranz- focused on online multiplayer, chat, and social features, ciestrad on authentication and UI, izperez on DevOps and monitoring, and aszamora on game logic, AI opponent, and database design.
 - **Branching strategy**: The team used a main branch with feature branches for individual work. Merge conflicts were resolved collaboratively.
 - **Code reviews**: Important changes were reviewed by at least one other team member before merging.
 - **Regular syncs**: The team held regular meetings to discuss progress, blockers, and next steps.
@@ -276,13 +276,13 @@ Unique constraint: (fromUserId, toUserId)
 
 | Feature | Description | Implemented by |
 |---------|-------------|----------------|
-| Tic-Tac-Toe Game | Core 3x3 board game with win/draw detection and turn management | aarranz-, ciestrad |
+| Tic-Tac-Toe Game | Core 3x3 board game with win/draw detection and turn management | aszamora, ciestrad |
 | Local Multiplayer | Two players on the same browser taking turns | ciestrad |
 | Online Multiplayer | Real-time multiplayer via WebSocket invitations | aarranz- |
-| AI Opponent | Three difficulty levels (Easy/Medium/Hard) using minimax algorithm | aarranz- |
+| AI Opponent | Three difficulty levels (Easy/Medium/Hard) using minimax algorithm | aszamora |
 | Game Reconnection | Rejoin ongoing games after disconnection | aarranz- |
 | Match History | View last 50 matches with results and opponent info | aarranz- |
-| Leaderboard | Top 10 players ranked by wins | aarranz- |
+| Leaderboard | Top 10 players ranked by wins | aszamora |
 
 ### Social Features
 
@@ -295,7 +295,7 @@ Unique constraint: (fromUserId, toUserId)
 | Avatar Upload | Upload and change profile picture | izperez |
 | Friends System | Send/accept/remove friend requests | aarranz- |
 | Online Status | See which friends are currently online | aarranz- |
-| Game Invitations | Invite online friends to play via modal | aarranz-, ciestrad |
+| Game Invitations | Invite online friends to play via modal | aszamora, ciestrad |
 | Direct Messages | Real-time chat with friends via WebSocket | aarranz- |
 
 ### UI/UX Features
@@ -303,7 +303,7 @@ Unique constraint: (fromUserId, toUserId)
 | Feature | Description | Implemented by |
 |---------|-------------|----------------|
 | Theme System | 4 switchable themes: Dark, Light, Retro, Lila | ciestrad |
-| Responsive Design | Mobile-first with swipeable carousel layout | aarranz- |
+| Responsive Design | Mobile-first with swipeable carousel layout | aszamora |
 | Invitation Toasts | Real-time notifications for incoming game invites | ciestrad |
 | Privacy Policy | Legal page accessible from footer | aszamora |
 | Terms of Service | Legal page accessible from footer | aszamora |
@@ -316,7 +316,7 @@ Unique constraint: (fromUserId, toUserId)
 | Nginx Reverse Proxy | SSL termination, routing, static file serving | ciestrad, izperez |
 | ELK Stack | Elasticsearch + Logstash + Kibana for centralized logging | izperez |
 | Prometheus Metrics | HTTP, WebSocket, game, and chat metrics collection | izperez |
-| Grafana Dashboards | Real-time visualization of application metrics | izperez-, aarranz- |
+| Grafana Dashboards | Real-time visualization of application metrics | izperez, aarranz- |
 | Health Checks | Service health monitoring and status endpoint | izperez |
 
 ## Modules
@@ -405,22 +405,24 @@ Unique constraint: (fromUserId, toUserId)
 
 ## Individual Contributions
 
-### aarranz- (42 commits)
+### aarranz- (26 commits)
 
-**Primary areas**: Game logic, WebSocket gateways, social features, responsive UI
+**Primary areas**: Online multiplayer, chat system, friends system, dashboards
 
-- Implemented the core Tic-Tac-Toe game component (`TicTacToe.tsx`) supporting local, online, and AI modes
 - Built the game WebSocket gateway (`game.gateway.ts`) handling real-time moves, invitations, room management, and reconnection
-- Built the chat WebSocket gateway (`chat.gateway.ts`) for direct messaging
-- Implemented the friends system (send/accept/remove requests, online status tracking)
-- Created the leaderboard and match history features
-- Developed the multiplayer invitation flow (modal, toast notifications)
-- Fixed responsive design with mobile carousel layout
+- Implemented online multiplayer with real-time move synchronization
 - Implemented game reconnection after disconnection
-- Set up Kibana dashboards and Grafana provisioning
-- Resolved multiple merge conflicts and integrated features from all team members
+- Developed the multiplayer invitation flow (modal, toast notifications)
+- Created the match history feature
+- Built the chat WebSocket gateway (`chat.gateway.ts`) for real-time direct messaging
+- Implemented the friends system: send/accept/remove friend requests, online status tracking
+- Created the user profile frontend with display of user information
+- Developed the FloatingChat component for direct message conversations
+- Set up Kibana dashboards for log visualization
+- Configured Grafana provisioning for metrics dashboards
+- Resolved merge conflicts and integrated features from all team members
 
-### ciestrad (18 commits)
+### ciestrad (20 commits)
 
 **Primary areas**: Authentication, frontend components, theming, UI/UX
 
@@ -433,7 +435,7 @@ Unique constraint: (fromUserId, toUserId)
 - Refactored frontend code for consistency and maintainability
 - Implemented user profile viewing for other users
 
-### izperez (16 commits)
+### izperez (17 commits)
 
 **Primary areas**: DevOps, monitoring, infrastructure, logging
 
@@ -449,12 +451,14 @@ Unique constraint: (fromUserId, toUserId)
 - Created user profile editing with avatar upload functionality
 - Set up health check endpoints
 
-### aszamora (7 commits)
+### aszamora (16 commits)
 
-**Primary areas**: Database design, legal pages, project planning
+**Primary areas**: Game logic, AI opponent, responsive UI, database design
 
+- Implemented the core Tic-Tac-Toe game component (`TicTacToe.tsx`) supporting local and AI modes
+- Implemented the AI opponent using the minimax algorithm with three difficulty levels (Easy, Medium, Hard)
+- Created the leaderboard feature
+- Fixed responsive design with mobile carousel layout
 - Designed and implemented the complete Prisma schema with 5 models (User, Match, Friendship, Channel, Message) and their relationships
 - Created the initial database migration and seed script
 - Implemented Privacy Policy and Terms of Service pages
-- Optimized Dockerfile build process
-- Documented project phases and planning
