@@ -83,11 +83,11 @@ export class GameService {
         },
     });
 
-    const active = await this.prisma.match.count({ where: { status: 'playing' } });
-    this.metrics.setActive(active);
+        const active = await this.prisma.match.count({ where: { status: 'playing' } });
+        this.metrics.setActive(active);
 
-    return activeMatches.map((m) => `game_${m.id}`); // roomIds afectados, para notificar al rival
-}
+        return activeMatches.map((m) => ({ roomId: `game_${m.id}`, board: m.board }));
+    }
 
     async getGameState(gameId: number) {
         const game = await this.prisma.match.findUnique({

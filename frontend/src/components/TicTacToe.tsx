@@ -45,7 +45,7 @@ export default function TicTacToe({
     const [error,      setError]      = useState<string | null>(null);
     const [aiThinking, setAiThinking] = useState(false);
 
-    const cells    = board.split("");
+    const cells    = (board ?? "_________").split("");
     const xCount   = cells.filter(c => c === "X").length;
     const oCount   = cells.filter(c => c === "O").length;
     const isP1Turn = xCount === oCount;
@@ -128,8 +128,14 @@ export default function TicTacToe({
         const onGameUpdated = (data: { board: string; status: string; winner: string | null }) => {
             setBoard(data.board); setStatus(data.status); setWinner(data.winner); setError(null);
         };
-        const onGameOver = (data: { winner: string | null; board: string }) => {
-            setBoard(data.board); setWinner(data.winner); setStatus("finished");
+        const onGameOver = (data: { winner: string | null; board?: string }) => {
+            if (data.board) setBoard(data.board);
+            let resolvedWinner = data.winner;
+            if (data.winner === 'opponent') {
+                resolvedWinner = myId === xId ? 'player2' : 'player1';
+            }
+            setWinner(resolvedWinner);
+            setStatus("finished");
             if (onGameEnd && initialGameId) {
                 onGameEnd(initialGameId, player2.id);
             }

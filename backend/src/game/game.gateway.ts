@@ -84,14 +84,38 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
             this.server.emit('user_disconnected', { userId });
             this.userMetrics.untrackOnline(userId);
 
-            const affectedRooms = await this.gameService.abandonGamesForUser(userId);
-            for (const roomId of affectedRooms) {
-                this.server.to(roomId).emit('game_over', {
-                    winner: 'opponent',
-                    reason: 'disconnect',
-                });
-            }
+            await this.abandonGamesAndNotify(userId);
         }
+    }
+
+    private async abandonGamesAndNotify(userId: number) {
+        const abandonedGames = await this.gameService.abandonGamesForUser(userId);
+        for (const game of abandonedGames) {
+            this.server.to(game.roomId).emit('game_over', {
+                winner: 'opponent',
+                board: game.board,
+                reason: 'disconnect',
+            });
+        }
+    }
+
+    /**
+     * Event: 'user_leaving'
+     * Payload: { userId: number }
+     *
+     * Called by the frontend's beforeunload handler to proactively
+     * abandon games before the socket actually disconnects.
+     */
+    @SubscribeMessage('user_leaving')
+    async handleUserLeaving(
+        @ConnectedSocket() client: Socket,
+        @MessageBody() data: { userId: number },
+    ) {
+        const userId = client.data.userId as number | undefined;
+        if (!userId || userId !== data.userId) return;
+
+        console.log(`[Game] Usuario ${userId} notifica salida anticipada`);
+        await this.abandonGamesAndNotify(userId);
     }
 
     // ── Helpers ────────────────────────────────────────────────────────────────

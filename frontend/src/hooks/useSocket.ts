@@ -97,7 +97,13 @@ export function useSocket({
       onOnlineUsersSnapshot(users);
     });
 
+    const handleBeforeUnload = () => {
+      socket.emit("user_leaving", { userId: player1.id });
+    };
+    window.addEventListener("beforeunload", handleBeforeUnload);
+
     return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload);
       socket.disconnect();
       socketRef.current = null;
     };
