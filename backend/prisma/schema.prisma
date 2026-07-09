@@ -39,9 +39,10 @@ model Match {
   board       String    @default("_________")
   customRules Json?
   finishedAt  DateTime?
-  isVsAI      Boolean   @default(false)
-  status      String    @default("waiting")
-  winner      String?
+  isVsAI         Boolean   @default(false)
+  status         String    @default("waiting")
+  winner         String?
+  disconnectedAt DateTime?
   player1     User      @relation("Player1", fields: [player1Id], references: [id])
   player2     User?     @relation("Player2", fields: [player2Id], references: [id])
 }

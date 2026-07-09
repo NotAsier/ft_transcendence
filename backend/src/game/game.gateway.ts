@@ -32,6 +32,11 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
     /** userId → socketId */
     private connectedUsers = new Map<number, string>();
 
+    /** gameId → timeout handle for disconnect grace period */
+    private disconnectTimers = new Map<number, NodeJS.Timeout>();
+
+    private static readonly DISCONNECT_TIMEOUT_MS = 5 * 60 * 1000;
+
     constructor(
         private jwtService: JwtService,
         private gameService: GameService,
@@ -84,7 +89,33 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
             this.server.emit('user_disconnected', { userId });
             this.userMetrics.untrackOnline(userId);
 
-            await this.abandonGamesAndNotify(userId);
+            await this.startDisconnectTimeout(userId);
+        }
+    }
+
+    private async startDisconnectTimeout(userId: number) {
+        const disconnectedGames = await this.gameService.markDisconnected(userId);
+        for (const game of disconnectedGames) {
+            if (this.disconnectTimers.has(game.gameId)) continue;
+
+            this.server.to(game.roomId).emit('opponent_disconnected', {
+                board: game.board,
+                timeoutMs: GameGateway.DISCONNECT_TIMEOUT_MS,
+            });
+
+            const timer = setTimeout(async () => {
+                this.disconnectTimers.delete(game.gameId);
+                const abandonedGames = await this.gameService.abandonGamesForUser(userId);
+                for (const g of abandonedGames) {
+                    this.server.to(g.roomId).emit('game_over', {
+                        winner: 'opponent',
+                        board: g.board,
+                        reason: 'disconnect',
+                    });
+                }
+            }, GameGateway.DISCONNECT_TIMEOUT_MS);
+
+            this.disconnectTimers.set(game.gameId, timer);
         }
     }
 
@@ -115,7 +146,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
         if (!userId || userId !== data.userId) return;
 
         console.log(`[Game] Usuario ${userId} notifica salida anticipada`);
-        await this.abandonGamesAndNotify(userId);
+        await this.startDisconnectTimeout(userId);
     }
 
     // ── Helpers ────────────────────────────────────────────────────────────────
@@ -268,6 +299,14 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
             // Join the socket to the game room
             client.join(data.roomId);
             console.log(`[Game] Usuario ${userId} se reunió a sala ${data.roomId}`);
+
+            // Cancel disconnect timer if the player reconnects
+            if (this.disconnectTimers.has(data.gameId)) {
+                clearTimeout(this.disconnectTimers.get(data.gameId)!);
+                this.disconnectTimers.delete(data.gameId);
+                await this.gameService.clearDisconnected(data.gameId);
+                console.log(`[Game] Timer de desconexión cancelado para partida ${data.gameId}`);
+            }
 
             // Send current game state to the reconnected player
             client.emit('game_state_sync', {

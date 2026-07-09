@@ -89,6 +89,31 @@ export class GameService {
         return activeMatches.map((m) => ({ roomId: `game_${m.id}`, board: m.board }));
     }
 
+    async markDisconnected(userId: number) {
+        const activeMatches = await this.prisma.match.findMany({
+            where: {
+                status: 'playing',
+                OR: [{ player1Id: userId }, { player2Id: userId }],
+            },
+        });
+
+        for (const match of activeMatches) {
+            await this.prisma.match.update({
+                where: { id: match.id },
+                data: { disconnectedAt: new Date() },
+            });
+        }
+
+        return activeMatches.map((m) => ({ roomId: `game_${m.id}`, board: m.board, gameId: m.id }));
+    }
+
+    async clearDisconnected(gameId: number) {
+        await this.prisma.match.update({
+            where: { id: gameId },
+            data: { disconnectedAt: null },
+        });
+    }
+
     async getGameState(gameId: number) {
         const game = await this.prisma.match.findUnique({
             where: { id: gameId },
@@ -406,10 +431,10 @@ export class GameService {
 
         if (!match) return null;
 
-        const playedAt = match.playedAt || match.finishedAt;
+        const timestamp = match.disconnectedAt || match.playedAt;
 
-        if (!playedAt) return null;
-        if (Date.now() - new Date(playedAt).getTime() > FIVE_MINUTES) return null;
+        if (!timestamp) return null;
+        if (match.disconnectedAt && Date.now() - new Date(timestamp).getTime() > FIVE_MINUTES) return null;
 
         return {
             gameId: match.id,
