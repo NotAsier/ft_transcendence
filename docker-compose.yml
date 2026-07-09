@@ -126,11 +126,21 @@ services:
       - discovery.type=single-node
       - xpack.security.enabled=true
       - ELASTIC_PASSWORD=${ELASTIC_PASSWORD}
+      - KIBANA_PASSWORD=${KIBANA_PASSWORD}
       - ES_JAVA_OPTS=-Xms512m -Xmx512m
     ports:
       - "9200:9200"
     volumes:
       - es_data:/usr/share/elasticsearch/data
+      - ./elk/setup_kibana.sh:/usr/local/bin/setup_kibana.sh:ro
+      - ./backend/kibana_dashboard/export.ndjson:/tmp/export.ndjson:ro
+    entrypoint: ["sh", "/usr/local/bin/setup_kibana.sh"]
+    healthcheck:
+      test: ["CMD-SHELL", "curl -s -u elastic:${ELASTIC_PASSWORD} http://localhost:9200/_cluster/health | grep -qE '\"status\":\"(green|yellow)\"'"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
     networks:
       app_network:
         ipv4_address: 172.20.0.8
@@ -162,7 +172,8 @@ services:
       - ELASTICSEARCH_USERNAME=kibana_system
       - ELASTICSEARCH_PASSWORD=${KIBANA_PASSWORD}
     depends_on:
-      - elasticsearch
+      elasticsearch:
+        condition: service_healthy
     networks:
       app_network:
         ipv4_address: 172.20.0.10
