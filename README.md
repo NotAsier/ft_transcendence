@@ -37,6 +37,7 @@ cp .env.example .env
 2. Edit `.env` and set the following at minimum:
 
 ```
+What ever you want:
 POSTGRES_USER=postgres
 POSTGRES_PASSWORD=postgres
 POSTGRES_DB=ft_transcendence
@@ -50,6 +51,34 @@ KIBANA_PASSWORD=your_kibana_password
 3. For Google OAuth, uncomment and fill in:
 
 ```
+
+Google OAuth (OAUTH_CLIENT_ID and OAUTH_CLIENT_SECRET)
+  Go to https://console.cloud.google.com
+  Create a new project or select an existing one
+  In the side menu go to APIs & Services → Credentials
+  Click Create Credentials → OAuth client ID
+  Select Web application
+  Under Authorized JavaScript origins add:
+
+       https://localhost:8443
+
+  Under Authorized redirect URIs add:
+
+       https://localhost:8443/api/auth/google/callback
+
+Click Create
+Copy the Client ID → OAUTH_CLIENT_ID
+Copy the Client Secret → OAUTH_CLIENT_SECRET
+
+
+You also need to enable the Google+ API:
+APIs & Services → Library → search "Google+ API" → Enable
+
+Important limitation: The Google OAuth callback URL is set to https://localhost:8443/api/auth/google/callback, which means Google will always redirect the user's browser back to localhost after authentication. This only works if the browser and the Docker server are running on the same machine.
+If you try to sign in with Google from a different device (e.g. a phone or another computer on the same network), the authentication will fail — Google will redirect to https://localhost:8443/... but on that device localhost points to itself, not to the machine running Docker.
+To support Google OAuth from external devices, a public domain or a tunneling tool like ngrok would be required, which is outside the scope of this project.
+
+
 OAUTH_CLIENT_ID=your_client_id
 OAUTH_CLIENT_SECRET=your_client_secret
 OAUTH_CALLBACK_URL=https://localhost:8443/api/auth/google/callback
@@ -114,10 +143,10 @@ All AI-generated code was reviewed, tested, and understood by the team before be
 
 | Member | Role | Responsibilities |
 |--------|------|-----------------|
-| aarranz- | Developer | Online multiplayer (WebSocket game gateway), chat system (WebSocket gateway, direct messages), friends system, user profiles, match history, reconnection, Kibana dashboards, Grafana provisioning |
-| ciestrad | Developer | Authentication system (JWT + Google OAuth), frontend components, theming system, Nginx/SSL configuration, , logging, user profiles |
+| aarranz- | Developer, Technical Leader| Online multiplayer (WebSocket game gateway), chat system (WebSocket gateway, direct messages), friends system,  match history, reconnection, Kibana dashboards, Grafana provisioning, responsive UI |
+| ciestrad | Developer, Product Owner | Authentication system (JWT + Google OAuth), frontend components, theming system, Nginx/SSL configuration, , logging, user profiles |
 | izperez | Developer | DevOps infrastructure (Docker, ELK stack, Prometheus, Grafana), monitoring/metrics system, profile editor|
-| aszamora | Developer | Tic-Tac-Toe core game logic, AI opponent (minimax), leaderboard, responsive UI, Prisma schema, Privacy Policy & Terms of Service |
+| aszamora | Developer, Proyect Manager| Tic-Tac-Toe core game logic, AI opponent (minimax), leaderboard, user profiles, Prisma schema, Privacy Policy & Terms of Service |
 
 ## Project Management
 
@@ -315,7 +344,7 @@ Unique constraint: (fromUserId, toUserId)
 | Docker Deployment | Full containerization with docker-compose | izperez |
 | Nginx Reverse Proxy | SSL termination, routing, static file serving | ciestrad, izperez |
 | ELK Stack | Elasticsearch + Logstash + Kibana for centralized logging | izperez |
-| Prometheus Metrics | HTTP, WebSocket, game, and chat metrics collection | izperez |
+| Prometheus Metrics | HTTP, WebSocket, game and chat metrics collection | izperez |
 | Grafana Dashboards | Real-time visualization of application metrics | izperez, aarranz- |
 | Health Checks | Service health monitoring and status endpoint | izperez |
 
