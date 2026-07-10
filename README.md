@@ -42,7 +42,8 @@ POSTGRES_USER=postgres
 POSTGRES_PASSWORD=postgres
 POSTGRES_DB=ft_transcendence
 DATABASE_URL="postgresql://postgres:postgres@db:5432/ft_transcendence"
-JWT_SECRET=your_jwt_secret_here
+Create with : openssl rand -base64 32
+    JWT_SECRET=your_jwt_secret_here
 GRAFANA_ADMIN_PASSWORD=your_grafana_password
 ELASTIC_PASSWORD=your_elastic_password
 KIBANA_PASSWORD=your_kibana_password
