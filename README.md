@@ -74,6 +74,8 @@ Copy the Client Secret → OAUTH_CLIENT_SECRET
 You also need to enable the Google+ API:
 APIs & Services → Library → search "Google+ API" → Enable
 
+https://www.youtube.com/watch?v=lhs_oXO1EHY
+
 Important limitation: The Google OAuth callback URL is set to https://localhost:8443/api/auth/google/callback, which means Google will always redirect the user's browser back to localhost after authentication. This only works if the browser and the Docker server are running on the same machine.
 If you try to sign in with Google from a different device (e.g. a phone or another computer on the same network), the authentication will fail — Google will redirect to https://localhost:8443/... but on that device localhost points to itself, not to the machine running Docker.
 To support Google OAuth from external devices, a public domain or a tunneling tool like ngrok would be required, which is outside the scope of this project.
