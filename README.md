@@ -437,7 +437,7 @@ Unique constraint: (fromUserId, toUserId)
 
 ## Individual Contributions
 
-### aarranz- (26 commits)
+### aarranz- (33 commits)
 
 **Primary areas**: Online multiplayer, chat system, friends system, dashboards
 
@@ -448,13 +448,14 @@ Unique constraint: (fromUserId, toUserId)
 - Created the match history feature
 - Built the chat WebSocket gateway (`chat.gateway.ts`) for real-time direct messaging
 - Implemented the friends system: send/accept/remove friend requests, online status tracking
-- Created the user profile frontend with display of user information
+- Created the user profile frontend with
 - Developed the FloatingChat component for direct message conversations
 - Set up Kibana dashboards for log visualization
+- Fixed responsive design with mobile carousel layout
 - Configured Grafana provisioning for metrics dashboards
 - Resolved merge conflicts and integrated features from all team members
 
-### ciestrad (20 commits)
+### ciestrad (26 commits)
 
 **Primary areas**: Authentication, frontend components, theming, UI/UX
 
@@ -483,14 +484,14 @@ Unique constraint: (fromUserId, toUserId)
 - Created user profile editing with avatar upload functionality
 - Set up health check endpoints
 
-### aszamora (16 commits)
+### aszamora (19 commits)
 
 **Primary areas**: Game logic, AI opponent, responsive UI, database design
 
 - Implemented the core Tic-Tac-Toe game component (`TicTacToe.tsx`) supporting local and AI modes
 - Implemented the AI opponent using the minimax algorithm with three difficulty levels (Easy, Medium, Hard)
 - Created the leaderboard feature
-- Fixed responsive design with mobile carousel layout
+- Display of user information
 - Designed and implemented the complete Prisma schema with 5 models (User, Match, Friendship, Channel, Message) and their relationships
 - Created the initial database migration and seed script
 - Implemented Privacy Policy and Terms of Service pages
