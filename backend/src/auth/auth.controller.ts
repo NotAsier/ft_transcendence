@@ -22,16 +22,32 @@ export class AuthController {
   constructor(private authService: AuthService) {}
 
   @Post('register')
-  register(@Body() dto: RegisterDto) {
-    return this.authService.register(
+  async register(@Body() dto: RegisterDto, @Res({ passthrough: true }) res: any) {
+    const result = await this.authService.register(
       dto.email, dto.password, dto.username,
       dto.birthDate, dto.country, dto.gender,
     );
+    res.cookie('token', result.access_token, {
+      httpOnly: true,
+      secure: true,
+      sameSite: 'lax',
+      path: '/',
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+    });
+    return result;
   }
 
   @Post('login')
-  login(@Body() dto: LoginDto) {
-    return this.authService.login(dto.email, dto.password);
+  async login(@Body() dto: LoginDto, @Res({ passthrough: true }) res: any) {
+    const result = await this.authService.login(dto.email, dto.password);
+    res.cookie('token', result.access_token, {
+      httpOnly: true,
+      secure: true,
+      sameSite: 'lax',
+      path: '/',
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+    });
+    return result;
   }
 
   @Get('google')
@@ -42,7 +58,25 @@ export class AuthController {
   @UseGuards(AuthGuard('google'))
   googleCallback(@Req() req: any, @Res() res: any) {
     const token = req.user.access_token;
-    res.redirect(`/?token=${token}`);
+    res.cookie('token', token, {
+      httpOnly: true,
+      secure: true,
+      sameSite: 'lax',
+      path: '/',
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+    });
+    res.redirect('/');
+  }
+
+  @Post('logout')
+  logout(@Res({ passthrough: true }) res: any) {
+    res.clearCookie('token', {
+      httpOnly: true,
+      secure: true,
+      sameSite: 'lax',
+      path: '/',
+    });
+    return { success: true };
   }
 
   @Get('me')

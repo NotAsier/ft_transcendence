@@ -17,8 +17,28 @@ export class UserController {
   constructor(private userService: UserService) {}
 
   @Get('me')
-  getMe(@Request() req) {
-    return this.userService.getMe(req.user.userId);
+  async getMe(@Request() req) {
+    const user = await this.userService.getMe(req.user.userId);
+    if (!user) return null;
+
+    // Extrae el token de la cookie o cabecera de autorización para que el frontend lo restaure en memoria
+    let token = '';
+    if (req.headers.authorization && req.headers.authorization.startsWith('Bearer ')) {
+      token = req.headers.authorization.split(' ')[1];
+    } else if (req.headers.cookie) {
+      const cookies = req.headers.cookie.split(';');
+      for (const cookie of cookies) {
+        const parts = cookie.split('=');
+        const name = parts[0].trim();
+        if (name === 'token') {
+          const value = parts.slice(1).join('=');
+          token = value ? decodeURIComponent(value.trim()) : '';
+          break;
+        }
+      }
+    }
+
+    return { ...user, token };
   }
 
   @Patch('me')

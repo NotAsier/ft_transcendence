@@ -91,28 +91,35 @@ export default function Home() {
         fetchPendingGames();
     }, [player1, friends]);
 
-    // ── Google OAuth redirect ─────────────────────────────────────────────
+    // ── Restore session from HttpOnly Cookie ──────────────────────────────
     useEffect(() => {
+        // Limpia token residual de la URL si existe (retrocompatibilidad)
         const params = new URLSearchParams(window.location.search);
-        const token  = params.get("token");
-        if (!token) return;
+        if (params.has("token")) {
+            window.history.replaceState({}, "", "/");
+        }
 
-        window.history.replaceState({}, "", "/");
-
-        fetch(`${API}/user/me`, { headers: authHeader(token) })
-            .then((r) => r.json())
-            .then(async (me) => {
-                const p1: Player = {
-                    id: me.id, username: me.username, token,
-                    email: me.email, displayName: me.displayName,
-                    country: me.country, gender: me.gender,
-                    birthDate: me.birthDate, wins: me.wins,
-                };
-                setPlayer1(p1);
-                await initSocial(token, me.id);
-                setView("lobby");
+        setLoading(true);
+        fetch(`${API}/user/me`)
+            .then((r) => {
+                if (!r.ok) throw new Error("No session");
+                return r.json();
             })
-            .catch(() => setError("Error al iniciar sesion con Google"));
+            .then(async (me) => {
+                if (me && me.id) {
+                    const p1: Player = {
+                        id: me.id, username: me.username, token: me.token || "",
+                        email: me.email, displayName: me.displayName,
+                        country: me.country, gender: me.gender,
+                        birthDate: me.birthDate, wins: me.wins, avatarUrl: me.avatarUrl,
+                    };
+                    setPlayer1(p1);
+                    await initSocial(me.token || "", me.id);
+                    setView("lobby");
+                }
+            })
+            .catch(() => {})
+            .finally(() => setLoading(false));
     }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
     // ── Socket hook ───────────────────────────────────────────────────────
@@ -360,7 +367,10 @@ export default function Home() {
         setSelectedProfile(profile);
     };
 
-    const handleLogout = () => {
+    const handleLogout = async () => {
+        try {
+            await fetch(`${API}/auth/logout`, { method: "POST" });
+        } catch {}
         setView("home");
         setPlayer1(null);
     };
